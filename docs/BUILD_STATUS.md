@@ -4,6 +4,16 @@
 **Live URL:** https://spot-game-green.vercel.app
 **Remaining:** PRD §74 phone-to-phone test (needs two real people on two devices)
 
+## Working documents
+
+| File | What it's for |
+|---|---|
+| **[GAP_LIST.md](GAP_LIST.md)** | Everything not yet built, prioritised P0–P3. Add to this when you decide something is needed but aren't doing it now. |
+| **[BUG_LIST.md](BUG_LIST.md)** | Defects found in testing, with root cause and fix. Add a row the moment a bug is observed. |
+| [RELEASE_AUDIT.md](RELEASE_AUDIT.md) | Point-in-time PASS/PARTIAL audit of every MVP requirement. |
+| [BUILD_PLAN.md](BUILD_PLAN.md) | The original phase-by-phase implementation plan. |
+| [PRD.md](PRD.md) | Source of truth for requirements. |
+
 ## Phase 9 (2026-08-29)
 
 ### Deployed
