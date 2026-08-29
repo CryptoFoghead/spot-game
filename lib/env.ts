@@ -32,8 +32,25 @@ function formatIssues(error: z.ZodError): string {
     .join("\n");
 }
 
+/**
+ * A variable present but empty (`AI_API_KEY=` sitting in .env.local waiting
+ * for a value) means "not configured", not "configured as empty string".
+ * Without this, a blank optional var fails validation and takes down every
+ * caller of serverEnv(), not just the feature that needs it.
+ */
+function blankToUndefined(
+  raw: Record<string, string | undefined>
+): Record<string, string | undefined> {
+  return Object.fromEntries(
+    Object.entries(raw).map(([key, value]) => [
+      key,
+      typeof value === "string" && value.trim() === "" ? undefined : value,
+    ])
+  );
+}
+
 export function parseClientEnv(raw: Record<string, string | undefined>): ClientEnv {
-  const result = clientSchema.safeParse(raw);
+  const result = clientSchema.safeParse(blankToUndefined(raw));
   if (!result.success) {
     throw new Error(`Invalid client environment variables:\n${formatIssues(result.error)}`);
   }
@@ -41,7 +58,7 @@ export function parseClientEnv(raw: Record<string, string | undefined>): ClientE
 }
 
 export function parseServerEnv(raw: Record<string, string | undefined>): ServerEnv {
-  const result = serverSchema.safeParse(raw);
+  const result = serverSchema.safeParse(blankToUndefined(raw));
   if (!result.success) {
     throw new Error(`Invalid server environment variables:\n${formatIssues(result.error)}`);
   }

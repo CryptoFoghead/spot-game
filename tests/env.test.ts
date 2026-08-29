@@ -40,9 +40,21 @@ describe("parseServerEnv", () => {
     expect(() => parseServerEnv(validServer)).not.toThrow();
   });
 
-  it("rejects an empty AI key when provided", () => {
+  // A blank line waiting for a value ("AI_API_KEY=") means not configured.
+  // Treating it as an invalid value would take down every serverEnv() caller,
+  // not just the feature that needs the key.
+  it("treats a blank optional variable as unset", () => {
+    const parsed = parseServerEnv({ ...validServer, AI_API_KEY: "" });
+    expect(parsed.AI_API_KEY).toBeUndefined();
+  });
+
+  it("treats a whitespace-only optional variable as unset", () => {
+    expect(parseServerEnv({ ...validServer, AI_API_KEY: "   " }).AI_API_KEY).toBeUndefined();
+  });
+
+  it("still rejects a blank required variable, naming it", () => {
     expect(() =>
-      parseServerEnv({ ...validServer, AI_API_KEY: "" })
-    ).toThrowError(/AI_API_KEY/);
+      parseServerEnv({ ...validServer, SUPABASE_SECRET_KEY: "" })
+    ).toThrowError(/SUPABASE_SECRET_KEY/);
   });
 });
