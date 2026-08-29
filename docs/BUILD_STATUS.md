@@ -26,13 +26,18 @@
 | `npm run build` | clean production build, 5 static routes |
 | Browser check | home + nav render, no console errors, mobile 375px OK |
 
+## Supabase project
+
+- Org **SocialBingo** (Free plan) · project **spot-game** · ref `auqhozkwgvtqzwtmuken` · us-west-2 · Postgres 17
+- CLI linked; local `.env.local` populated (publishable + secret keys). Free-tier note: project pauses after 1 week of inactivity — restore from dashboard.
+
 ## Migrations
 
-| File | Applied to a database? |
+| File | Applied? |
 |---|---|
-| `supabase/migrations/20260829000001_initial_schema.sql` | ❌ not yet — no Supabase project exists |
-| `supabase/migrations/20260829000002_rls_policies.sql` | ❌ not yet |
-| `supabase/seed.sql` | ❌ not yet |
+| `supabase/migrations/20260829000001_initial_schema.sql` | ✅ 2026-08-29 via `supabase db push` |
+| `supabase/migrations/20260829000002_rls_policies.sql` | ✅ 2026-08-29 |
+| `supabase/seed.sql` | ✅ 2026-08-29 (`db push --include-seed`) — verified live: 28 categories, 8 games, 320 squares readable by anon; deny-all tables return nothing |
 
 ## Environment variables required (see .env.example)
 
@@ -55,6 +60,5 @@
 
 ## Next actions (Phase 2)
 
-1. Create Supabase project; apply both migrations + seed.
-2. Supabase Auth (magic link) + `/auth/callback` + profile-creation trigger.
-3. Home page real data, game detail, explore, My Games, create/edit wizard, square editor, duplicate.
+1. Supabase Auth (magic link) + `/auth/callback` + profile-creation trigger.
+2. Home page real data, game detail, explore, My Games, create/edit wizard, square editor, duplicate.
