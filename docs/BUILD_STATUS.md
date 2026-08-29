@@ -1,7 +1,41 @@
 # BUILD STATUS
 
-**Current phase:** Phase 7 — Polish ✅ complete
-**Next phase:** Phase 8 — QA sweep (not started)
+**Current phase:** Phase 8 — QA ✅ complete
+**Next phase:** Phase 9 — Deploy (**blocked**: needs a Vercel project)
+
+See **[docs/RELEASE_AUDIT.md](RELEASE_AUDIT.md)** for the full PASS/FAIL/PARTIAL audit against every MVP requirement.
+
+## Phase 8 (2026-08-29)
+
+### Added
+
+- **Playwright E2E** covering the PRD §73 mandatory scenario in three isolated browser contexts — host, player A, player B. This finally exercises what a single browser profile cannot: genuinely separate guest cookies. Host starts → both join → host starts game → A marks → **B sees A's progress with no reload** → A gets bingo → **B sees the bingo alert** → host ends. Plus removed-player-cannot-rejoin and unknown-room-code.
+- **`scripts/scan-secrets.js`** — proves no server secret appears in the client bundle or any tracked file, reporting names and counts only, never values.
+- **`scripts/verify-rls.js`** rewritten into a full anonymous-access probe across all nine tables (read / insert / delete), unpublished-game visibility, and direct callability of internal database functions.
+
+### Bug found and fixed: ending a game 404'd everyone
+
+Room pages resolved the room through `get_join_info`, which only matches joinable rooms. The instant a host ended a game, the room became unreachable — the host who just ended it, and any player who reloaded, got the "We couldn't find that" page, and the "This game has ended" screen (§64) was unreachable. Migration 0010 adds a status-agnostic resolver for participants while `get_join_info` still correctly refuses to let anyone *join* a completed room. Caught by the E2E test's final assertion.
+
+### A false alarm worth recording
+
+The first RLS probe reported that anonymous DELETE succeeded on all nine tables (HTTP 204). It had not: PostgREST returns 204 for a DELETE matching **zero** rows, and RLS filters rows silently. Seed counts were unchanged (28/8/320). The probe now compares row counts before and after instead of trusting the status code — status alone cannot distinguish "blocked" from "deleted everything".
+
+### Results
+
+| Check | Result |
+|---|---|
+| `npm run lint` | clean |
+| `npm run typecheck` | clean |
+| `npm run test` | 113/113 |
+| `npm run e2e` | 3/3 including §73 |
+| `npm run build` | clean |
+| Secret exposure scan | PASS |
+| Anonymous access probe | PASS |
+
+---
+
+## Phase 7 (2026-08-29)
 
 ## Phase 7 (2026-08-29)
 

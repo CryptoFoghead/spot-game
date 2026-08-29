@@ -35,7 +35,6 @@ export type RoomSnapshot = {
     isFree: boolean;
     marked: boolean;
   }>;
-  /** Added by the loader from the public join info, for headings and sharing. */
   gameTitle: string;
 };
 
@@ -50,15 +49,17 @@ export async function loadRoomSnapshot(
   if (!token) return null;
 
   const supabase = await createClient();
-  const { data: joinInfo } = await supabase.rpc("get_join_info", {
+  // Resolves in any status — a participant must still be able to see a room
+  // that has ended, which get_join_info deliberately hides.
+  const { data: roomId } = await supabase.rpc("resolve_room_id", {
     p_room_code: roomCode,
   });
-  if (!joinInfo?.roomId) return null;
+  if (!roomId) return null;
 
   const { data, error } = await supabase.rpc("get_room_snapshot", {
-    p_room_id: joinInfo.roomId,
+    p_room_id: roomId,
     p_token: token,
   });
   if (error || !data) return null;
-  return { ...data, gameTitle: joinInfo.gameTitle } as RoomSnapshot;
+  return data as RoomSnapshot;
 }
