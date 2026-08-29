@@ -1,7 +1,54 @@
 # BUILD STATUS
 
-**Current phase:** Phase 5 — Realtime ✅ complete
-**Next phase:** Phase 6 — AI-assisted creation (**blocked**, see below)
+**Current phase:** Phase 6 — AI-assisted creation ⚠️ built, live call unverified
+**Next phase:** Phase 7 — Polish
+
+## ⛔ Blockers
+
+| # | Blocker | Blocks | What I need from you |
+|---|---|---|---|
+| 1 | `AI_API_KEY` is not set | Verifying the live AI generation call | An Anthropic API key in `.env.local`. Everything around the call is built and tested; the endpoint currently returns a clean 503. |
+| 2 | No Vercel project | Phase 9 (deploy) | Connect the GitHub repo to Vercel and add the four env vars, or tell me to use the Vercel CLI. |
+
+## Phase 6 (2026-08-29)
+
+### Completed features
+
+- **`POST /api/ai/generate-squares`** (PRD §36): authenticated creators only, per-user rate limited, Zod-validated request, structured JSON response validated before it is returned.
+- **Server-only key.** `AI_API_KEY` is read through the server env accessor and the SDK is only constructed inside the route handler — it can never reach the browser (§9).
+- **Safety prompt** (§37) and **content-rating guidance** (§38) live in `lib/ai/prompt.ts` and are asserted by tests, so the rules can't silently drift.
+- **Duplicate filtering** (§36): a normalizing key ignores case, punctuation and filler words, so near-duplicates ("Someone carrying a giant turkey leg" vs "carrying giant turkey leg") collide. Applied both within a batch and against the game's existing squares.
+- **Creator UI**: Generate Ideas / Add 10 Ideas, with each suggestion editable or droppable before it is kept — nothing is saved until the creator accepts it.
+- **Graceful degradation**: with no key configured the endpoint returns 503 with a friendly message and the rest of the app is unaffected.
+- Model: `claude-opus-5` via the official `@anthropic-ai/sdk`, using `messages.parse` with a Zod-derived `output_config.format`, and typed error handling for rate-limit/auth/API failures. Refusals (`stop_reason: "refusal"`) are handled explicitly rather than dereferenced.
+
+### Verified
+
+- Unauthenticated request → **401** (§65: never allow unauthenticated AI)
+- Authenticated + valid request → **503 "AI generation isn't configured yet"** — proving auth, rate limiting and validation all pass and only the key is missing
+- Authenticated + invalid request → **400** with a field-level Zod message
+- 21 unit tests covering the safety prompt contents, rating guidance, prompt assembly, dedupe keys, response-schema validation and the rate limiter
+
+### Not yet verified (blocker #1)
+
+The actual model call. Everything up to `client.messages.parse(...)` is exercised; the call itself, the shape of a real response, and end-to-end suggestion quality need a key.
+
+### Known limitation
+
+The rate limiter is in-memory and therefore per-instance. It stops a browser from hammering the endpoint (the MVP requirement) but is not distributed — on multiple serverless instances the effective ceiling is limit × instances. This is documented in the code and should move to Postgres or Redis before real traffic.
+
+### Quality gates (all passing)
+
+| Check | Result |
+|---|---|
+| `npm run lint` | clean |
+| `npm run typecheck` | clean |
+| `npm run test` | 110/110 |
+| `npm run build` | clean |
+
+---
+
+## Phase 5 (2026-08-29)
 
 ## Phase 5 (2026-08-29)
 

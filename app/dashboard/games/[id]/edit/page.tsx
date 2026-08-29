@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { AIGenerator } from "@/components/creator/ai-generator";
 import { GameSettingsForm } from "@/components/creator/game-settings-form";
 import { PublishControls } from "@/components/creator/publish-controls";
 import { SquareEditor } from "@/components/creator/square-editor";
@@ -66,6 +67,17 @@ export default async function EditGamePage(
           categories={categories ?? []}
           gameId={game.id}
           defaults={game}
+        />
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-bold tracking-tight">Idea generator</h2>
+        <AIGenerator
+          gameId={game.id}
+          category={game.category}
+          rating={game.content_rating}
+          existingSquares={(squares ?? []).map((square) => square.text)}
+          defaultLocation={game.title}
         />
       </section>
 
