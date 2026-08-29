@@ -1,55 +1,49 @@
 import "server-only";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 /**
- * Per-user rate limiting for the AI endpoint (PRD §65).
+ * AI usage limits (PRD §65), enforced in Postgres so every serverless
+ * instance shares one counter. An in-process limiter gave each instance its
+ * own budget, making the real ceiling limit x instances.
  *
- * In-memory and therefore per-instance: it stops one signed-in creator from
- * hammering the endpoint from a browser, which is the MVP requirement. It is
- * NOT a distributed limiter — on multiple serverless instances the effective
- * ceiling is (limit x instances). Move this to Postgres or Redis before the
- * endpoint is exposed to real traffic at scale.
+ * Two limits apply, both claimed in a single atomic call:
+ *   - per user, per rolling hour: stops one creator hammering the endpoint
+ *   - global, per rolling day: guards the API bill
  */
-
-type Bucket = { count: number; resetAt: number };
-
-const buckets = new Map<string, Bucket>();
 
 export type RateLimitResult = {
   allowed: boolean;
+  reason: "ok" | "user_limit" | "global_limit" | "unauthenticated" | "error";
   remaining: number;
   retryAfterSeconds: number;
 };
 
-export function checkRateLimit(
-  key: string,
-  limit = 10,
-  windowMs = 60 * 60 * 1000
-): RateLimitResult {
-  const now = Date.now();
-  const bucket = buckets.get(key);
+export const USER_HOURLY_LIMIT = 10;
+export const GLOBAL_DAILY_LIMIT = 500;
 
-  if (!bucket || bucket.resetAt <= now) {
-    buckets.set(key, { count: 1, resetAt: now + windowMs });
-    return { allowed: true, remaining: limit - 1, retryAfterSeconds: 0 };
-  }
+/**
+ * Claims one generation for the signed-in user, recording it if allowed.
+ * Call this immediately before the model request.
+ */
+export async function claimAiGeneration(
+  supabase: SupabaseClient,
+  options: { userLimit?: number; globalDailyLimit?: number } = {}
+): Promise<RateLimitResult> {
+  const { data, error } = await supabase.rpc("claim_ai_generation", {
+    p_user_limit: options.userLimit ?? USER_HOURLY_LIMIT,
+    p_global_daily_limit: options.globalDailyLimit ?? GLOBAL_DAILY_LIMIT,
+  });
 
-  if (bucket.count >= limit) {
+  if (error || !data) {
+    // Fail closed: a limiter that errors open is not a limiter.
     return {
       allowed: false,
+      reason: "error",
       remaining: 0,
-      retryAfterSeconds: Math.ceil((bucket.resetAt - now) / 1000),
+      retryAfterSeconds: 60,
     };
   }
 
-  bucket.count += 1;
-  return {
-    allowed: true,
-    remaining: limit - bucket.count,
-    retryAfterSeconds: 0,
-  };
-}
-
-/** Test seam. */
-export function resetRateLimits() {
-  buckets.clear();
+  return data as RateLimitResult;
 }

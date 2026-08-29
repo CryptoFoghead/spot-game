@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { newGuestToken, readGuestToken, writeGuestToken } from "@/lib/guest";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import {
   gameModeSchema,
@@ -30,7 +31,7 @@ function friendly(message: string | undefined): string {
     return "This game doesn't have enough squares to start yet.";
   // Unmapped failures still reach the user as a generic message, but the
   // cause must not vanish.
-  console.error("[rooms] unmapped RPC error:", message);
+  reportError("rooms.rpc", new Error(message));
   return "Something went wrong. Try again.";
 }
 

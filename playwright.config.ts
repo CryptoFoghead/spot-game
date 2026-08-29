@@ -1,6 +1,15 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const baseURL = process.env.E2E_BASE_URL ?? "http://localhost:3000";
+/**
+ * Defaults to port 3100, not 3000, so the suite never silently reuses a dev
+ * server started by something else — a stale server on 3000 once made every
+ * test fail against code that wasn't this branch.
+ *
+ * Point at a deployment with E2E_BASE_URL; the local server is then skipped.
+ */
+const baseURL = process.env.E2E_BASE_URL ?? "http://localhost:3100";
+const isLocal = baseURL.startsWith("http://localhost");
+const port = isLocal ? new URL(baseURL).port || "3000" : undefined;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -20,14 +29,15 @@ export default defineConfig({
     actionTimeout: 20_000,
     navigationTimeout: 45_000,
   },
-  projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-  ],
-  // Reuses an already-running dev server; starts one if needed.
-  webServer: {
-    command: "npm run dev",
-    url: baseURL,
-    reuseExistingServer: true,
-    timeout: 120_000,
-  },
+  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  ...(isLocal
+    ? {
+        webServer: {
+          command: `npm run dev -- --port ${port}`,
+          url: baseURL,
+          reuseExistingServer: true,
+          timeout: 120_000,
+        },
+      }
+    : {}),
 });

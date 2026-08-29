@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
+import { reportError } from "@/lib/observability";
 
 export default function GlobalError({
   error,
@@ -12,7 +13,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[app] unhandled error:", error);
+    reportError("app.boundary", error, { digest: error.digest ?? null });
   }, [error]);
 
   return (

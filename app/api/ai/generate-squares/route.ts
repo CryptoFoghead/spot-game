@@ -9,8 +9,9 @@ import {
   generationResultSchema,
   SQUARE_SYSTEM_PROMPT,
 } from "@/lib/ai/prompt";
-import { checkRateLimit } from "@/lib/ai/rate-limit";
+import { claimAiGeneration } from "@/lib/ai/rate-limit";
 import { serverEnv } from "@/lib/env";
+import { reportError, reportWarning } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -42,16 +43,8 @@ export async function POST(request: Request) {
     );
   }
 
-  // 2. Rate limit per user.
-  const limit = checkRateLimit(`ai:${user.id}`);
-  if (!limit.allowed) {
-    return NextResponse.json(
-      { error: "You've hit the generation limit. Try again later." },
-      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } }
-    );
-  }
-
-  // 3. Validate the request.
+  // 2. Validate the request before anything is spent on it — a malformed
+  //    request must not consume the caller's quota.
   let body: unknown;
   try {
     body = await request.json();
@@ -68,8 +61,9 @@ export async function POST(request: Request) {
   }
   const input = parsed.data;
 
-  // 4. The key is required only when this endpoint is actually used, so the
-  //    rest of the app still builds and runs without it configured.
+  // 3. The key is required only when this endpoint is actually used, so the
+  //    rest of the app still builds and runs without it configured. Checked
+  //    before claiming so a misconfigured deploy doesn't burn anyone's quota.
   let apiKey: string;
   try {
     const env = serverEnv();
@@ -79,6 +73,29 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "AI generation isn't configured yet." },
       { status: 503 }
+    );
+  }
+
+  // 4. Claim a generation against the shared, database-backed limits.
+  //    Claimed immediately before the model call, so the count reflects
+  //    requests that actually reach the API.
+  const limit = await claimAiGeneration(supabase);
+  if (!limit.allowed) {
+    if (limit.reason === "global_limit") {
+      // Worth knowing about: the cost guard is holding back real users.
+      reportWarning("ai.global_limit", "Daily AI generation cap reached", {
+        userId: user.id,
+      });
+    }
+    const message =
+      limit.reason === "global_limit"
+        ? "The idea generator is resting for today. Try again tomorrow."
+        : limit.reason === "error"
+          ? "Couldn't check your usage. Try again in a moment."
+          : "You've hit the generation limit. Try again later.";
+    return NextResponse.json(
+      { error: message },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } }
     );
   }
 
@@ -136,20 +153,20 @@ export async function POST(request: Request) {
       );
     }
     if (error instanceof Anthropic.AuthenticationError) {
-      console.error("[ai] authentication failed — check AI_API_KEY");
+      reportError("ai.auth", error, { hint: "check AI_API_KEY" });
       return NextResponse.json(
         { error: "AI generation isn't configured correctly." },
         { status: 503 }
       );
     }
     if (error instanceof Anthropic.APIError) {
-      console.error("[ai] API error:", error.status, error.message);
+      reportError("ai.api", error, { status: error.status ?? 0 });
       return NextResponse.json(
         { error: "The idea generator had a problem. Try again." },
         { status: 502 }
       );
     }
-    console.error("[ai] unexpected error:", error);
+    reportError("ai.unexpected", error);
     return NextResponse.json(
       { error: "Something went wrong. Try again." },
       { status: 500 }

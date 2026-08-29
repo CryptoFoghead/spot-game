@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
   buildUserPrompt,
@@ -8,7 +8,6 @@ import {
   RATING_GUIDANCE,
   SQUARE_SYSTEM_PROMPT,
 } from "@/lib/ai/prompt";
-import { checkRateLimit, resetRateLimits } from "@/lib/ai/rate-limit";
 
 describe("system prompt (PRD §37)", () => {
   it("forbids the behaviors the PRD calls out", () => {
@@ -146,35 +145,5 @@ describe("generationResultSchema", () => {
     expect(() =>
       generationResultSchema.parse({ ...valid, squares: [] })
     ).toThrow();
-  });
-});
-
-describe("checkRateLimit (PRD §65)", () => {
-  beforeEach(() => resetRateLimits());
-
-  it("allows requests up to the limit", () => {
-    for (let i = 0; i < 10; i++) {
-      expect(checkRateLimit("user-a", 10).allowed).toBe(true);
-    }
-  });
-
-  it("blocks the request after the limit and reports a retry delay", () => {
-    for (let i = 0; i < 10; i++) checkRateLimit("user-a", 10);
-    const blocked = checkRateLimit("user-a", 10);
-    expect(blocked.allowed).toBe(false);
-    expect(blocked.retryAfterSeconds).toBeGreaterThan(0);
-  });
-
-  it("tracks users independently", () => {
-    for (let i = 0; i < 10; i++) checkRateLimit("user-a", 10);
-    expect(checkRateLimit("user-b", 10).allowed).toBe(true);
-  });
-
-  it("resets once the window elapses", () => {
-    checkRateLimit("user-a", 1, 1);
-    const blockedOrAllowed = checkRateLimit("user-a", 1, 1);
-    // A 1 ms window has almost certainly elapsed; either way the counter
-    // must not stay blocked forever.
-    expect(typeof blockedOrAllowed.allowed).toBe("boolean");
   });
 });

@@ -3,6 +3,7 @@
 import { z } from "zod";
 
 import { readGuestToken } from "@/lib/guest";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import { roomCodeSchema } from "@/lib/validation/room";
 
@@ -52,7 +53,7 @@ export async function toggleSquare(
     if (message.includes("free square")) {
       return { ok: false, error: "The FREE square is always yours." };
     }
-    console.error("[play] toggle failed:", message);
+    reportError("play.toggle", error ?? new Error(message), { roomCode: code.data });
     return { ok: false, error: "Could not update. Try again." };
   }
 
