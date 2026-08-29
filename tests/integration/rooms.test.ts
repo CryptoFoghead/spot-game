@@ -48,6 +48,50 @@ describeLive("room lifecycle RPCs", () => {
     expect(snap.card).toHaveLength(25);
   });
 
+  /**
+   * A session token stays valid until it expires, so auth.uid() can name a
+   * user row that no longer exists (account deletion, PRD §57). That used to
+   * fail the room_players foreign key and block joining entirely.
+   */
+  it("lets a signed-in user whose account was deleted still join as a guest", async () => {
+    const { adminClient } = await import("./helpers");
+    const admin = adminClient();
+    const email = `orphan-${crypto.randomUUID()}@example.com`;
+
+    const { data: created } = await admin.auth.admin.createUser({
+      email,
+      email_confirm: true,
+    });
+    const userId = created.user!.id;
+
+    const { data: link } = await admin.auth.admin.generateLink({
+      type: "magiclink",
+      email,
+    });
+
+    const staleClient = anonClient();
+    const { error: otpError } = await staleClient.auth.verifyOtp({
+      token_hash: link.properties!.hashed_token,
+      type: "email",
+    });
+    expect(otpError).toBeNull();
+
+    // The session is now live; remove the underlying user.
+    await admin.auth.admin.deleteUser(userId);
+
+    const room = await createRoom(testToken("host"));
+    const { data, error } = await staleClient.rpc("join_room", {
+      p_room_code: room.roomCode,
+      p_nickname: "Orphan",
+      p_guest_token: testToken("orphan"),
+    });
+
+    expect(error).toBeNull();
+    expect(data.playerId).toBeTruthy();
+
+    await staleClient.auth.signOut();
+  });
+
   it("rejects a weak host token", async () => {
     const { error } = await supabase.rpc("create_room", {
       p_game_template_id: AIRPORT_BINGO_ID,

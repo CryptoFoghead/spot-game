@@ -27,8 +27,8 @@ export function WinnerOverlay({
       aria-label="Bingo"
       className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 p-6 backdrop-blur"
     >
-      <div className="flex w-full max-w-sm flex-col items-center gap-3 rounded-xl border bg-background p-6 text-center shadow-xl">
-        <p className="text-4xl" aria-hidden>
+      <div className="flex w-full max-w-sm flex-col items-center gap-3 rounded-xl border bg-background p-6 text-center shadow-xl motion-safe:animate-in motion-safe:zoom-in-95 motion-safe:duration-300">
+        <p className="text-4xl motion-safe:animate-bounce" aria-hidden>
           🎉
         </p>
         <p className="text-2xl font-extrabold tracking-tight">BINGO!</p>

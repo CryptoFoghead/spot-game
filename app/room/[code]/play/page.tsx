@@ -40,9 +40,13 @@ export default async function PlayRoomPage(
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-4 px-3 py-4">
       <header className="flex items-center justify-between gap-2">
-        <div>
-          <p className="text-xs text-muted-foreground">Room {room.code}</p>
-          <p className="font-semibold">{me.nickname}</p>
+        <div className="min-w-0">
+          <h1 className="truncate font-bold tracking-tight">
+            {snapshot.gameTitle}
+          </h1>
+          <p className="text-xs text-muted-foreground">
+            Room {room.code} · {me.nickname}
+          </p>
         </div>
         <div className="flex flex-col items-end gap-1">
           <Badge variant={room.status === "active" ? "default" : "secondary"}>

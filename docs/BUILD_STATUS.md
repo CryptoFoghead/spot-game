@@ -1,7 +1,26 @@
 # BUILD STATUS
 
-**Current phase:** Phase 6 — AI-assisted creation ⚠️ built, live call unverified
-**Next phase:** Phase 7 — Polish
+**Current phase:** Phase 7 — Polish ✅ complete
+**Next phase:** Phase 8 — QA sweep (not started)
+
+## Phase 7 (2026-08-29)
+
+- Friendly error surfaces (PRD §64): `not-found` page, root error boundary, and skeleton loading states for the board and Explore.
+- Share sheet (§77): Web Share API where supported, clipboard fallback otherwise.
+- PWA manifest and icon (§61) — Add to Home Screen works without a native app.
+- Game title now appears as the heading on both the host and play screens; winner celebration animates under `motion-safe` so reduced-motion users are respected.
+
+### Bug found and fixed: orphaned sessions blocked joining
+
+A Supabase session token stays cryptographically valid until it expires, so `auth.uid()` can name a user row that no longer exists — after account deletion (which §57 requires supporting) or a database restore. `room_players.user_id` then failed its foreign key and the person could not join or host at all, seeing only "Something went wrong."
+
+`create_room` and `join_room` now resolve the caller through `auth.users`, so a stale token degrades to anonymous guest identity — which every room path already supports. Migration 0009, with an integration test that creates a user, takes a live session, deletes the user, and asserts the join still succeeds.
+
+This surfaced twice during manual testing before being diagnosed; the first time it was misread as test-environment noise.
+
+---
+
+## Phase 6 (2026-08-29)
 
 ## ⛔ Blockers
 

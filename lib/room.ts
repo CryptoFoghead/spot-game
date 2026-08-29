@@ -35,6 +35,8 @@ export type RoomSnapshot = {
     isFree: boolean;
     marked: boolean;
   }>;
+  /** Added by the loader from the public join info, for headings and sharing. */
+  gameTitle: string;
 };
 
 /**
@@ -58,5 +60,5 @@ export async function loadRoomSnapshot(
     p_token: token,
   });
   if (error || !data) return null;
-  return data as RoomSnapshot;
+  return { ...data, gameTitle: joinInfo.gameTitle } as RoomSnapshot;
 }

@@ -6,6 +6,7 @@ import { CopyLinkButton } from "@/components/room/copy-link-button";
 import { HostControls, RemovePlayerButton } from "@/components/room/host-controls";
 import { RoomLive } from "@/components/room/room-live";
 import { RoomQRCode } from "@/components/room/room-qr-code";
+import { ShareButton } from "@/components/room/share-button";
 import { Badge } from "@/components/ui/badge";
 import { clientEnv } from "@/lib/env";
 import { loadRoomSnapshot } from "@/lib/room";
@@ -33,7 +34,7 @@ export default async function HostRoomPage(
     );
   }
 
-  const { room, players } = snapshot;
+  const { room, players, gameTitle } = snapshot;
   const joinUrl = `${clientEnv().NEXT_PUBLIC_SITE_URL}/join/${room.code}`;
 
   return (
@@ -53,9 +54,11 @@ export default async function HostRoomPage(
         />
       </div>
 
-      <h1 className="mt-3 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+      <h1 className="mt-3 text-2xl font-extrabold tracking-tight">{gameTitle}</h1>
+
+      <p className="mt-4 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
         Scan to join
-      </h1>
+      </p>
       <p className="font-mono text-5xl font-extrabold tracking-widest">
         {room.code}
       </p>
@@ -64,7 +67,10 @@ export default async function HostRoomPage(
         <RoomQRCode joinUrl={joinUrl} />
         <div className="flex flex-col gap-2">
           <p className="text-sm break-all text-muted-foreground">{joinUrl}</p>
-          <CopyLinkButton value={joinUrl} />
+          <div className="flex flex-wrap gap-2">
+            <ShareButton gameTitle={gameTitle} joinUrl={joinUrl} />
+            <CopyLinkButton value={joinUrl} />
+          </div>
         </div>
       </div>
 
