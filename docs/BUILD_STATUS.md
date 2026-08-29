@@ -1,7 +1,48 @@
 # BUILD STATUS
 
-**Current phase:** Phase 2 — Game Library & Creator experience ✅ complete
-**Next phase:** Phase 3 — Room Creation & Join
+**Current phase:** Phase 3 — Room Creation & Join ✅ complete
+**Next phase:** Phase 4 — Authoritative gameplay
+
+## Phase 3 (2026-08-29)
+
+### Completed features
+
+- **Guest identity** (PRD §10): server-issued 32-byte opaque token in an httpOnly per-room cookie; only its sha256 hash is stored. Nickname is display-only and never identity.
+- **`create_room`**: validates the game is startable by the caller and has enough squares, allocates a 4-digit code with collision retry, creates the room, the host player, and the host's card.
+- **Anonymous hosting**: PRD §80 requires a *new visitor* to start a room, so hosts authenticate by guest token; `host_user_id` is set only when they happen to be signed in.
+- **`join_room`**: validates room/expiry, sanitizes the nickname, creates the player and their card atomically; re-joining with the same token returns the same seat instead of duplicating.
+- **Server-side card generation** (§18): independent `gen_random_uuid()` shuffle per player, 24 squares + FREE center at position 12, pre-marked.
+- **Room lifecycle** (§22): `start`/`pause`/`resume`/`end` with the state machine enforced in SQL; COMPLETED is terminal. `remove_player` (host-only, cannot remove the host).
+- **`get_room_snapshot`**: authoritative per-viewer state — room, players, and *only the caller's own card*.
+- **UI**: Start Game control on game detail (nickname + mode), host lobby with QR code + copy link + player list + host controls, `/join/[code]` screen with game title/rating/player count and safety notice, player board with 5×5 grid and leaderboard, `/join` code entry.
+- Room codes are unique only among reachable rooms (partial index), so 4-digit codes stay viable long-term.
+
+### Bugs found and fixed during verification
+
+- **Host had no card.** `create_room` created the host's player row without a card, so the host's board was empty — violating §80 ("both receive Cards"). Fixed in migration 0006; regression test added.
+- **False 🔥 "one away" indicator.** It was inferred from score (`score >= total - 1`), which is not what "one square from bingo" means and fired on an empty card. Removed; it needs real line analysis, which arrives with Phase 4 bingo detection.
+- Unmapped RPC errors were silently collapsed into a generic message; they are now logged server-side.
+
+### Verified live in the browser
+
+- Anonymous visitor started a room from Airport Bingo → host lobby with working QR, room code, copy link, and their own 25-square card
+- A second player joined a *different* node-hosted room through the real join form with no account → 25 squares, 1 FREE center, lobby waiting state, both players listed
+- Host saw the second player appear with a Remove control; Start Game moved the room to `active` and swapped controls to Pause/End
+- Mobile 375px board: no horizontal scroll
+- 14 integration tests against the live database cover card independence, rejoin, removal, state-machine legality, host-only authorization, stranger rejection, and REST-level inaccessibility of gameplay tables
+
+### Quality gates (all passing)
+
+| Check | Result |
+|---|---|
+| `npm run lint` | clean |
+| `npm run typecheck` | clean |
+| `npm run test` | 43/43 |
+| `npm run build` | clean, 13 routes |
+
+---
+
+## Phase 2 (2026-08-29)
 
 ## Phase 2 (2026-08-29)
 

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { DuplicateButton } from "@/components/game/duplicate-button";
+import { StartGameButton } from "@/components/game/start-game-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -68,10 +69,11 @@ export default async function GameDetailPage(props: PageProps<"/games/[slug]">) 
         <p className="mt-2 max-w-xl text-muted-foreground">{game.description}</p>
       ) : null}
 
-      <div className="mt-6 flex flex-wrap gap-3">
-        <Button size="lg" disabled title="Multiplayer rooms arrive in Phase 3">
-          Start Game
-        </Button>
+      <div className="mt-6">
+        <StartGameButton gameId={game.id} />
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-3">
         {user ? (
           <DuplicateButton gameId={game.id} />
         ) : (
@@ -89,10 +91,6 @@ export default async function GameDetailPage(props: PageProps<"/games/[slug]">) 
           </Button>
         ) : null}
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">
-        Starting live rooms is coming next — duplicate the game to make it your
-        own in the meantime.
-      </p>
 
       <section className="mt-10">
         <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
