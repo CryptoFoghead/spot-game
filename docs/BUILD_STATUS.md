@@ -1,7 +1,44 @@
 # BUILD STATUS
 
-**Current phase:** Phase 4 — Authoritative gameplay ✅ complete
-**Next phase:** Phase 5 — Realtime
+**Current phase:** Phase 5 — Realtime ✅ complete
+**Next phase:** Phase 6 — AI-assisted creation (**blocked**, see below)
+
+## Phase 5 (2026-08-29)
+
+### Completed features
+
+- **Broadcast originates in the database.** A trigger on `room_events` calls `realtime.send()` on the room's topic, so every message is emitted inside the same transaction that changed authoritative state. Clients cannot forge events, and no message can describe a change that did not commit. This was chosen over client-side broadcasting specifically because clients are untrusted.
+- **Sanitized payloads** (§32): messages carry event type, player, score and marked count — never square text or positions, so a subscriber cannot reconstruct another player's card by listening. An integration test asserts no card text appears in any broadcast.
+- **Events**: PLAYER_JOINED / PLAYER_REMOVED / GAME_STARTED / GAME_PAUSED / GAME_RESUMED / GAME_COMPLETED / SQUARE_MARKED / SQUARE_UNMARKED / BINGO.
+- **Presence** (§27) for connectivity only — an online count and a status dot. Participation always comes from the database.
+- **Reconnect** (§29): every (re)subscribe triggers an authoritative refetch rather than replaying missed events. Bursts of marks are coalesced into one refetch (250 ms) so a fast-marking room doesn't refetch per tap.
+- Connection indicator with "Connection lost. Reconnecting…" state.
+
+### Verified live in the browser (two independent clients)
+
+With a browser player and a separate node-driven player in the same room, **with no navigation or manual refresh in the browser**:
+
+- the other player's marks moved them from 0 → 3 in the leaderboard and the "Leader:" line updated
+- the other player's bingo raised the winner overlay ("MikeLaptop got bingo — 5 squares spotted") and added the trophy
+
+This satisfies PRD §87's completion bar: one player's actions update the other player's screen without a manual refresh.
+
+### Worth recording
+
+A broadcast sent immediately after `SUBSCRIBED` can be missed — the topic takes a moment to route. This is precisely why the client resyncs from the database on connect instead of reconstructing state from events (§29), and the integration test now settles before asserting.
+
+### Quality gates (all passing)
+
+| Check | Result |
+|---|---|
+| `npm run lint` | clean |
+| `npm run typecheck` | clean |
+| `npm run test` | 89/89 |
+| `npm run build` | clean |
+
+---
+
+## Phase 4 (2026-08-29)
 
 ## Phase 4 (2026-08-29)
 

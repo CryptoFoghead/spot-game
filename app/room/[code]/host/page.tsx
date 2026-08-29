@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { CopyLinkButton } from "@/components/room/copy-link-button";
 import { HostControls, RemovePlayerButton } from "@/components/room/host-controls";
+import { RoomLive } from "@/components/room/room-live";
 import { RoomQRCode } from "@/components/room/room-qr-code";
 import { Badge } from "@/components/ui/badge";
 import { clientEnv } from "@/lib/env";
@@ -37,13 +38,19 @@ export default async function HostRoomPage(
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-8">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-3">
         <Badge variant={room.status === "active" ? "default" : "secondary"}>
           {room.status}
         </Badge>
         <span className="text-sm text-muted-foreground capitalize">
           {room.gameMode}
         </span>
+        <RoomLive
+          roomId={room.id}
+          playerId={snapshot.me?.id ?? null}
+          nickname={snapshot.me?.nickname ?? "Host"}
+          role="host"
+        />
       </div>
 
       <h1 className="mt-3 text-sm font-semibold tracking-wide text-muted-foreground uppercase">

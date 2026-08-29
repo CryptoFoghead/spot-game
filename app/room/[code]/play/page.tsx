@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Leaderboard } from "@/components/game/leaderboard";
 import { PlayBoard } from "@/components/game/play-board";
 import { WinnerOverlay } from "@/components/game/winner-overlay";
+import { RoomLive } from "@/components/room/room-live";
 import { Badge } from "@/components/ui/badge";
 import { loadRoomSnapshot } from "@/lib/room";
 
@@ -43,9 +44,17 @@ export default async function PlayRoomPage(
           <p className="text-xs text-muted-foreground">Room {room.code}</p>
           <p className="font-semibold">{me.nickname}</p>
         </div>
-        <Badge variant={room.status === "active" ? "default" : "secondary"}>
-          {room.status === "active" ? "● LIVE" : room.status}
-        </Badge>
+        <div className="flex flex-col items-end gap-1">
+          <Badge variant={room.status === "active" ? "default" : "secondary"}>
+            {room.status === "active" ? "● LIVE" : room.status}
+          </Badge>
+          <RoomLive
+            roomId={room.id}
+            playerId={me.id}
+            nickname={me.nickname}
+            role={me.role}
+          />
+        </div>
       </header>
 
       {isLobby ? (
