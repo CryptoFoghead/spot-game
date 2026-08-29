@@ -1,12 +1,14 @@
 # SPOT — Release Audit
 
-**Date:** 2026-08-29 · **Against:** `docs/PRD.md` MVP scope (§6, §80) · **Commit:** Phase 8
+**Date:** 2026-08-29 · **Against:** `docs/PRD.md` MVP scope (§6, §80) · **Status:** deployed
 
 Nothing is marked PASS unless I observed it working. Requirements verified only by reading code are marked PARTIAL and say so.
 
 ## Verdict
 
-**The core game works end to end and is release-ready pending deployment.** PRD §80's Definition of MVP Done is met for the guest/player path, verified by an automated three-context browser test. Two items are outstanding: AI generation is unverified (no API key) and nothing is deployed yet. Neither blocks the core loop; both are listed under Blockers.
+**The MVP is complete and live at https://spot-game-green.vercel.app.** PRD §80's Definition of MVP Done is met, verified both by an automated three-context browser test on localhost and by a deliberate two-client run against production. AI generation is verified live. Both original blockers are resolved.
+
+The one thing left is PRD §74: two real people on two phones on separate networks. That needs humans, not automation.
 
 ---
 
@@ -44,7 +46,7 @@ Nothing is marked PASS unless I observed it working. Requirements verified only 
 | Select category | **PASS** | FK-constrained to the 28 seeded categories |
 | Select content level | **PASS** | family / standard / unfiltered |
 | Add / edit / delete Square | **PASS** | All three verified in browser |
-| AI suggestion endpoint | **PARTIAL** | Built, authenticated, rate-limited, validated. Live model call unverified — no API key. Returns a clean 503. |
+| AI suggestion endpoint | **PASS** | Verified live: 200 in ~13s, location-aware squares, honors existing-square exclusion; Generate → edit → Keep persists |
 | Save Game Template | **PASS** | Publish enforces the 24-square minimum with an exact message |
 | Public/private toggle | **PASS** | private / unlisted / public, enforced by RLS |
 
@@ -131,8 +133,8 @@ Nothing is marked PASS unless I observed it working. Requirements verified only 
 
 | # | Blocker | Impact | Needs |
 |---|---|---|---|
-| 1 | `AI_API_KEY` not set | AI generation unverified end to end | An Anthropic API key with credits |
-| 2 | Not deployed | §74 phone-to-phone testing impossible; §80 assumes a real URL | Vercel project + production env vars + Supabase redirect URLs |
+| 1 | ~~AI_API_KEY not set~~ | **RESOLVED** — key in place, live generation verified (200, location-aware squares, creator UI path works) | — |
+| 2 | ~~Not deployed~~ | **RESOLVED** — live at https://spot-game-green.vercel.app, two-client multiplayer verified in production | — |
 
 ## Non-blocking issues
 

@@ -45,13 +45,20 @@ test.afterAll(async () => {
     .neq("id", "00000000-0000-0000-0000-000000000000");
 });
 
+/**
+ * Against a deployment the first request can hit a cold start, and the click
+ * must land after hydration or the handler isn't attached yet. Both are far
+ * slower than localhost, so navigation waits are explicit and generous.
+ */
+const NAV_TIMEOUT = 45_000;
+
 /** Starts a room from a public game as an anonymous visitor (PRD §80). */
 async function hostStartsRoom(page: Page, nickname: string) {
   await page.goto("/games/airport-bingo");
   await page.getByLabel("Your nickname").fill(nickname);
   await page.getByRole("button", { name: "Start Game" }).click();
 
-  await page.waitForURL(/\/room\/\d{4}\/host/);
+  await page.waitForURL(/\/room\/\d{4}\/host/, { timeout: NAV_TIMEOUT });
   const roomCode = page.url().match(/\/room\/(\d{4})\//)![1];
 
   const { data } = await admin
@@ -70,7 +77,7 @@ async function playerJoins(page: Page, roomCode: string, nickname: string) {
   await page.goto(`/join/${roomCode}`);
   await page.getByLabel("Your nickname").fill(nickname);
   await page.getByRole("button", { name: "Join Game" }).click();
-  await page.waitForURL(`**/room/${roomCode}/play`);
+  await page.waitForURL(`**/room/${roomCode}/play`, { timeout: NAV_TIMEOUT });
 }
 
 function boardTiles(page: Page) {

@@ -1,7 +1,40 @@
 # BUILD STATUS
 
-**Current phase:** Phase 8 — QA ✅ complete
-**Next phase:** Phase 9 — Deploy (**blocked**: needs a Vercel project)
+**Current phase:** Phase 9 — Deployed and live 🚀
+**Live URL:** https://spot-game-green.vercel.app
+**Remaining:** PRD §74 phone-to-phone test (needs two real people on two devices)
+
+## Phase 9 (2026-08-29)
+
+### Deployed
+
+- Vercel project `spot-game` under `ryan-wirtjes-projects`, production alias **https://spot-game-green.vercel.app**
+- All five environment variables set for Production and Preview (pushed via `scripts/push-vercel-env.js`, which never prints values)
+- `NEXT_PUBLIC_SITE_URL` set to the production origin so magic links and QR join URLs point at the real site
+- Supabase auth `site_url` and redirect URLs updated to production, keeping localhost for development
+
+### AI generation verified live
+
+With the key in place: authenticated request returned **200 in ~13s** with genuinely location-aware squares ("full Iowa or Iowa State gear from hat to socks", "a soft cooler that definitely contains snacks from home"), varied difficulty, and it honored the existing-squares exclusion. The creator UI path also works end to end: Generate Ideas → 10 editable suggestions → Keep → persisted to the game.
+
+### Production verified
+
+- All routes 200; live database data rendering; AI endpoint still 401 to unauthenticated callers
+- Two independent clients in a production room: one player's marks and bingo reached the other **with no reload** — winner overlay, trophy and leaderboard all updated
+
+### Bug found and fixed: your own score went stale after marking
+
+On production only, marking a square flipped the tile but left your score and leaderboard row stale until you reloaded. The board (after a successful mark) and the realtime channel (on every broadcast) each called `router.refresh()` independently; under real latency these overlapped and **aborted each other**, and the aborted one was usually the last — so the final state never rendered. Localhost resolved fast enough to hide it entirely.
+
+`lib/room-refresh.ts` now provides one trailing-edge debounced scheduler shared by both components, so a burst of activity produces exactly one refetch after it settles. Re-verified on production: marking now updates score and leaderboard immediately.
+
+### Note on the E2E suite
+
+The Playwright suite is a **pre-deploy gate run against localhost**, where it passes reliably. Running it against the deployment proved flaky for test-harness reasons rather than app defects — `waitForLoadState("networkidle")` never settles on pages holding a Supabase realtime WebSocket (removed), and repeated three-context runs against a live deployment contend for local browser resources, failing at a different step each time. Production was therefore verified deliberately with two real clients, which is the check that matters.
+
+---
+
+## Phase 8 (2026-08-29)
 
 See **[docs/RELEASE_AUDIT.md](RELEASE_AUDIT.md)** for the full PASS/FAIL/PARTIAL audit against every MVP requirement.
 

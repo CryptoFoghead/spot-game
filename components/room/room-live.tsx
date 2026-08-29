@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
+import { useRoomRefresh } from "@/lib/room-refresh";
 import { createClient } from "@/lib/supabase/client";
 
 type ConnectionState = "connecting" | "live" | "offline";
@@ -27,22 +27,15 @@ export function RoomLive({
   nickname: string;
   role: string;
 }) {
-  const router = useRouter();
+  const scheduleRefresh = useRoomRefresh();
   const [state, setState] = useState<ConnectionState>("connecting");
   const [onlineCount, setOnlineCount] = useState(0);
-  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase.channel(`room:${roomId}`, {
       config: { presence: { key: playerId ?? `viewer-${nickname}` } },
     });
-
-    // Bursts of marks shouldn't trigger a refetch each; coalesce them.
-    const scheduleRefresh = () => {
-      if (refreshTimer.current) clearTimeout(refreshTimer.current);
-      refreshTimer.current = setTimeout(() => router.refresh(), 250);
-    };
 
     channel
       .on("broadcast", { event: "*" }, scheduleRefresh)
@@ -53,7 +46,7 @@ export function RoomLive({
         if (status === "SUBSCRIBED") {
           setState("live");
           // Authoritative resync on every (re)connect.
-          router.refresh();
+          scheduleRefresh();
           await channel.track({ playerId, nickname, role });
         } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
           setState("offline");
@@ -63,10 +56,9 @@ export function RoomLive({
       });
 
     return () => {
-      if (refreshTimer.current) clearTimeout(refreshTimer.current);
       supabase.removeChannel(channel);
     };
-  }, [roomId, playerId, nickname, role, router]);
+  }, [roomId, playerId, nickname, role, scheduleRefresh]);
 
   return (
     <p

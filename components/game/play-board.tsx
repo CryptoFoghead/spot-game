@@ -1,11 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 
 import { toggleSquare } from "@/app/actions/play";
 import type { CardSquare } from "@/components/game/bingo-board";
 import { BingoSquare } from "@/components/game/bingo-square";
+import { useRoomRefresh } from "@/lib/room-refresh";
 
 /**
  * Optimistic marking (PRD §28): the tile flips immediately, then reverts with
@@ -20,11 +20,10 @@ export function PlayBoard({
   roomCode: string;
   interactive: boolean;
 }) {
-  const router = useRouter();
+  const scheduleRefresh = useRoomRefresh();
   const [squares, setSquares] = useState(initialSquares);
   const [pendingIds, setPendingIds] = useState<ReadonlySet<string>>(new Set());
   const [message, setMessage] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
 
   // Server-rendered state wins whenever the page revalidates. Adjusting during
   // render (rather than in an effect) avoids a frame of stale marks.
@@ -65,7 +64,8 @@ export function PlayBoard({
 
     // Keep the authoritative value even if it disagrees with the guess.
     setMarked(square.id, result.marked ?? optimistic);
-    startTransition(() => router.refresh());
+    // Score, leaderboard and winner state live in the server render.
+    scheduleRefresh();
   }
 
   useEffect(() => {
