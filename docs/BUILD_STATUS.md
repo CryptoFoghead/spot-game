@@ -1,7 +1,45 @@
 # BUILD STATUS
 
-**Current phase:** Phase 3 — Room Creation & Join ✅ complete
-**Next phase:** Phase 4 — Authoritative gameplay
+**Current phase:** Phase 4 — Authoritative gameplay ✅ complete
+**Next phase:** Phase 5 — Realtime
+
+## Phase 4 (2026-08-29)
+
+### Completed features
+
+- **`toggle_square`** (PRD §23): a single atomic transaction that authenticates the player by guest token, verifies the room is active and the card is theirs, toggles the mark, recomputes the score from stored state, detects bingo, writes an audit event, and settles the winner. The player row is locked (`for update`) so rapid taps cannot interleave a recount.
+- **Bingo detection** (§24) implemented twice and cross-checked: `card_has_bingo` in SQL is authoritative; `lib/game/bingo.ts` lets the client render instantly and makes the rules unit-testable. An integration test asserts the two agree.
+- **First-winner settlement** (§25): the null-check and write are one statement, so a tie resolves to exactly one winner. `continue_after_win` keeps the room live or completes it.
+- **Score** (§50) is always recomputed from the database, never accepted from the client, and excludes the FREE square.
+- **Optimistic UI** (§28): the tile flips immediately, reverts on rejection, and shows a friendly message. The authoritative value always wins on refresh.
+- **Winner overlay** (§34): dismissible celebration that never navigates a player away from their card.
+- Marking is refused in lobby/paused/completed rooms, on another player's card, with an unknown token, after removal, and on the FREE square.
+
+### Verified live in the browser
+
+- Joined an active room as a guest, tapped a real tile → score became 1 authoritatively
+- Completed the top row → server detected bingo, winner overlay showed "You got bingo — 5 squares spotted", trophy appeared in the leaderboard
+- Paused the room from outside mid-play → the next tap was rejected and reverted with "The game isn't running right now."
+
+### Tests
+
+- 33 bingo unit tests (PRD §72 mandatory set): every row, every column, both diagonals, no-false-positive cases, FREE centre, blackout, and 3×3/7×7 cards
+- 11 gameplay integration tests against the live database, including the SQL↔TypeScript agreement check and first-winner-wins under a second bingo
+
+*A test premise was wrong during this phase and worth recording: "24 of 25 marked is not a bingo" is impossible — removing one square cannot break all 12 lines. The meaningful near-miss is 20 of 25 with the anti-diagonal left empty.*
+
+### Quality gates (all passing)
+
+| Check | Result |
+|---|---|
+| `npm run lint` | clean |
+| `npm run typecheck` | clean |
+| `npm run test` | 87/87 |
+| `npm run build` | clean |
+
+---
+
+## Phase 3 (2026-08-29)
 
 ## Phase 3 (2026-08-29)
 

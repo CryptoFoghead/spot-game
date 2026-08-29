@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { BingoBoard } from "@/components/game/bingo-board";
 import { Leaderboard } from "@/components/game/leaderboard";
+import { PlayBoard } from "@/components/game/play-board";
+import { WinnerOverlay } from "@/components/game/winner-overlay";
 import { Badge } from "@/components/ui/badge";
 import { loadRoomSnapshot } from "@/lib/room";
 
@@ -31,6 +32,9 @@ export default async function PlayRoomPage(
 
   const leader = players[0];
   const isLobby = room.status === "lobby";
+  const winner = room.winnerPlayerId
+    ? players.find((player) => player.id === room.winnerPlayerId)
+    : null;
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-4 px-3 py-4">
@@ -65,11 +69,21 @@ export default async function PlayRoomPage(
 
       {room.status === "paused" ? (
         <p className="rounded-lg border border-dashed px-3 py-2 text-sm text-muted-foreground">
-          The host paused the game.
+          The host paused the game — marking is off until they resume.
         </p>
       ) : null}
 
-      <BingoBoard squares={card} roomCode={room.code} interactive={false} />
+      {room.status === "completed" ? (
+        <p className="rounded-lg border border-dashed px-3 py-2 text-sm text-muted-foreground">
+          This game has ended.
+        </p>
+      ) : null}
+
+      <PlayBoard
+        initialSquares={card}
+        roomCode={room.code}
+        interactive={room.status === "active"}
+      />
 
       <section>
         <h2 className="mb-2 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
@@ -77,6 +91,14 @@ export default async function PlayRoomPage(
         </h2>
         <Leaderboard players={players} meId={me.id} />
       </section>
+
+      {winner ? (
+        <WinnerOverlay
+          nickname={winner.nickname}
+          score={winner.score}
+          isMe={winner.id === me.id}
+        />
+      ) : null}
     </div>
   );
 }
