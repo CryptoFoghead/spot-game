@@ -1,9 +1,45 @@
 # BUILD STATUS
 
-**Current phase:** Phase 1 — Foundation ✅ complete
-**Next phase:** Phase 2 — Game Library & Creator experience
+**Current phase:** Phase 2 — Game Library & Creator experience ✅ complete
+**Next phase:** Phase 3 — Room Creation & Join
 
-## Completed features
+## Phase 2 (2026-08-29)
+
+### Completed features
+
+- **Auth**: magic-link sign-in (`/login`), `/auth/callback` (handles token_hash and PKCE code), sign-out, session-refresh proxy (`proxy.ts`), auth-aware header, `requireUser` guard, profile auto-creation trigger (migration 0003)
+- **Home page**: live Popular Games (8 seeded, ordered by play_count), category chips, room-code input, hero CTAs
+- **Explore**: public published games grid + category filter, empty states
+- **Game detail** `/games/[slug]`: badges, square count, 8-square preview, server-rendered SEO metadata, Duplicate (auth), Edit (owner), Start Game disabled pending Phase 3
+- **My Games** `/dashboard/games`: Created/Drafts tabs, square counts, edit/view actions
+- **Create** `/create`: settings form (title/description/category/content rating/visibility) → draft → editor
+- **Edit** `/dashboard/games/[id]/edit`: settings, square add/edit/delete with per-square difficulty, live counter with minimum/recommended, publish (slug assigned on first publish, min-square guard), archive with confirm
+- **Duplicate**: atomic `duplicate_game_template` RPC (migration 0004) — SECURITY DEFINER with explicit access checks, copies active squares, records remix lineage, always lands as the caller's private draft
+- **Validation**: Zod schemas for game settings and squares (PRD §69 bounds) + `minimumSquares` rule + slug utilities
+- All mutations enforce ownership server-side (explicit check + RLS backstop)
+
+### Verified live in the browser (real Supabase project)
+
+- Magic-link sign-in end-to-end (admin-generated link, dev helper `scripts/dev-login-link.js`)
+- Create → draft → add/edit/delete square → publish blocked at 1/24 with exact error → duplicate Airport Bingo (40 squares copied) → publish succeeds, slug `airport-bingo-copy` → archive
+- RLS negative tests (`scripts/verify-rls.js`): private published game invisible to anon; anon PATCH affects 0 rows; anon square INSERT → 401
+- Mobile 375px: home + explore, no horizontal scroll
+- Test user and test templates cleaned up; seeds intact (28/8/320)
+
+### Quality gates (all passing)
+
+| Check | Result |
+|---|---|
+| `npm run lint` | clean |
+| `npm run typecheck` | clean |
+| `npm run test` | 29/29 |
+| `npm run build` | clean, 10 dynamic routes + proxy |
+
+---
+
+## Phase 1 (2026-08-29)
+
+### Completed features
 
 - Next.js 16.3.3 (App Router, Turbopack) with TypeScript strict mode
 - Tailwind CSS v4 + shadcn/ui (base-nova / Base UI) with button, card, input, label, badge, textarea, select
@@ -37,7 +73,11 @@
 |---|---|
 | `supabase/migrations/20260829000001_initial_schema.sql` | ✅ 2026-08-29 via `supabase db push` |
 | `supabase/migrations/20260829000002_rls_policies.sql` | ✅ 2026-08-29 |
+| `supabase/migrations/20260829000003_auth_profiles.sql` | ✅ 2026-08-29 (profile trigger) |
+| `supabase/migrations/20260829000004_duplicate_game_rpc.sql` | ✅ 2026-08-29 (duplicate RPC) |
 | `supabase/seed.sql` | ✅ 2026-08-29 (`db push --include-seed`) — verified live: 28 categories, 8 games, 320 squares readable by anon; deny-all tables return nothing |
+
+Auth config: `site_url` and `/auth/callback` redirect URLs pushed via `supabase config push`. Production URLs must be added before deploy (Phase 9).
 
 ## Environment variables required (see .env.example)
 
@@ -58,7 +98,9 @@
 - Gameplay tables (rooms writes, player_cards, player_card_squares, room_events) are deny-all under RLS; all access flows through validated server operations built in Phases 3–5. Guests have no auth identity, so client-side RLS cannot authorize them.
 - Difficulty CHECK-constrained to easy/medium/hard (PRD leaves it open).
 
-## Next actions (Phase 2)
+## Next actions (Phase 3 — Room Creation & Join)
 
-1. Supabase Auth (magic link) + `/auth/callback` + profile-creation trigger.
-2. Home page real data, game detail, explore, My Games, create/edit wizard, square editor, duplicate.
+1. `create_room()` RPC: template validation, unique 4-digit room code with collision retry, host room_player.
+2. `join_room()` RPC: guest token (hash stored), room_player + server-side card generation (crypto shuffle, FREE center).
+3. `/join/[code]` flow, room lobby (host + player views), QR code rendering, host player list + remove.
+4. Uses the deny-all gameplay tables — all access through the RPCs/server routes.
