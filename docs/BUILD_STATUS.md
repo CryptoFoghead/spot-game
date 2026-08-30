@@ -14,6 +14,44 @@
 | [BUILD_PLAN.md](BUILD_PLAN.md) | The original phase-by-phase implementation plan. |
 | [PRD.md](PRD.md) | Source of truth for requirements. |
 
+## Bad-wifi hardening and the entitlement seam (2026-08-30)
+
+### What breaks at a restaurant
+
+Two failure classes, found by asking what happens on a bad connection rather than a fast one.
+
+**B-20 — a tap that lied.** `PlayBoard` awaited the mark action with no `try`. A server action *rejects* on a dead network rather than returning a failure, so the tile kept its optimistic mark while the database had none — the board said "spotted", the score said 0 — and the square stayed pending, dead for the rest of the game even after the network returned.
+
+**B-21 — every other form.** `PlayBoard` was the only component calling an action directly; the rest go through `useActionState`, which lets a rejection reach the error boundary. Joining a game with no signal replaced the page with "Something went wrong. That's on us", which blames us for their wifi, discards the nickname they typed, and promises the safety of a game they had not joined yet. `withNetworkGuard` now wraps all 17 actions. It deliberately **rethrows server-side exceptions** — hiding a real bug behind "check your connection" would be a lie and would stop it being reported — and both directions were checked against an action made to throw, not assumed.
+
+**B-22 — pockets.** A backgrounded socket dies without always saying so, so a phone could come back showing a stale board under a "live" indicator. `RoomLive` resyncs on `visibilitychange` and `online`; measured at one refetch per event.
+
+Also added the project's first component tests (8) and six tests for what a real table does — arriving late, a latecomer joining a co-op game in progress, two people both called Sam, marking after the host ends it. All six passed first run.
+
+### The entitlement seam (G-28)
+
+Built now because the alternative is threading a tier check through every limit later. There is still nothing to buy — what is missing is a way to *pay*, not a way to *be* a supporter.
+
+- A private `user_entitlements` table with **no write policies at all**: granting is a trusted path (a script today, a payment webhook later), and nobody can grant themselves anything.
+- Deliberately not a column on `profiles`, which are publicly readable — who is paying is nobody else's business.
+- Each tier's allowance is defined once in SQL and mirrored in `lib/entitlements.ts`, with a test that fails if they drift, the same arrangement the bingo rules use.
+- `scripts/set-tier.js` grants or clears a tier, optionally with an expiry, so the seam does something today rather than waiting for Stripe.
+
+It also closed a real hole: **the per-user AI limit was supplied by the caller.** Never exploited — our own route passed the right number — but a limit the caller chooses is not a limit. It now comes from the account's tier, and `p_user_limit` survives only as an override that can make the ceiling *smaller*.
+
+### Quality gates
+
+| Gate | Result |
+|---|---|
+| Lint · typecheck | clean |
+| Unit + integration | **226 passed** (up from 195) |
+| E2E · accessibility | 10 · 7 |
+| Secret scan · RLS probe | pass (both new tables locked to anonymous clients) |
+| Production build | compiled |
+| Production verification | Co-op played live; join-on-dead-network verified on the deployment |
+
+---
+
 ## Together mode and date-night content (2026-08-29)
 
 Built to serve a case the PRD did not anticipate: **two people at one table**, rather than a group watching a crowd. It is also the first thing built with repeat play in mind — if a couple plays it twice, that says something about whether a subscription is realistic.
