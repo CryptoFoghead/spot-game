@@ -47,6 +47,11 @@ One shared card for the room instead of one card each.
 | Accessibility (axe) | 7 passed |
 | Production build | compiled |
 | Browser verification | Two players in one co-op room, same card, attribution flags correct |
+| Production verification | Co-op room played on the live deployment: shared card renders, a tap scores "Together: 1 / You spotted 1" |
+
+### Then the bug that mattered most (B-20)
+
+Looking for what would break at a restaurant rather than on a desk, the marking path turned out to have no `try` around the server action. On a dead network the tile claimed "spotted" while the score stayed 0, said nothing, and **that square was dead for the rest of the game** — even after the network returned. Reproduced by stubbing `fetch`, fixed, and verified again on production. Covered by the project's first component tests (8), because neither the unit nor the integration suite can see a defect that lives entirely in how the client handles a rejected call.
 
 ---
 
