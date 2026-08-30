@@ -116,6 +116,25 @@ describeLive("entitlements", () => {
     await admin.from("ai_usage").delete().eq("user_id", bob.userId);
   });
 
+  it("applies the tier when the limit arrives as an explicit null", async () => {
+    // This is the exact shape lib/ai/rate-limit.ts sends. PostgREST can treat
+    // an explicit null differently from an omitted argument, and if it read as
+    // zero here every generation would be refused, so the production call
+    // shape gets its own test rather than relying on the `{}` one above.
+    await admin.from("ai_usage").delete().eq("user_id", bob.userId);
+
+    const { data, error } = await bob.client.rpc("claim_ai_generation", {
+      p_user_limit: null,
+      p_global_daily_limit: 500,
+    });
+
+    expect(error).toBeNull();
+    expect(data.allowed).toBe(true);
+    expect(data.remaining).toBe(ENTITLEMENTS.free.aiGenerationsPerHour - 1);
+
+    await admin.from("ai_usage").delete().eq("user_id", bob.userId);
+  });
+
   it("still lets a caller ask for something stricter", async () => {
     await admin.from("ai_usage").delete().eq("user_id", bob.userId);
 
