@@ -64,4 +64,5 @@ Everything known to be missing, incomplete, or deferred. This is the running to-
 
 - **Supabase free tier pauses after 7 days of inactivity.** The app will look broken until you restore it from the dashboard. If SPOT gets real usage, this is the first thing to upgrade.
 - **Room codes are 4 digits and unique only among reachable rooms.** Fine now. PRD §20 says migrate to 6-character alphanumeric when volume grows — at a few thousand concurrent rooms, collision retries start failing.
+- **This project owns port 3001.** Another app on this machine uses 3000. `npm run dev`, `npm run start`, Playwright and `.claude/launch.json` all pin 3001, and `GET /api/health` identifies the app so a port collision fails loudly (see README).
 - **The E2E suite is a localhost gate.** Running it against the deployment is flaky for harness reasons (see [BUG_LIST.md](BUG_LIST.md) B-09). Verify production deliberately instead.

@@ -1,18 +1,20 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Defaults to port 3100, not 3000, so the suite never silently reuses a dev
- * server started by something else — a stale server on 3000 once made every
- * test fail against code that wasn't this branch.
+ * This project owns port 3001 (see README "Port"). Another app on this machine
+ * uses 3000, so nothing here should ever default to it.
+ *
+ * `globalSetup` verifies the server on the port really is SPOT before any test
+ * runs — reuseExistingServer will otherwise adopt whatever is listening.
  *
  * Point at a deployment with E2E_BASE_URL; the local server is then skipped.
  */
-const baseURL = process.env.E2E_BASE_URL ?? "http://localhost:3100";
+const baseURL = process.env.E2E_BASE_URL ?? "http://localhost:3001";
 const isLocal = baseURL.startsWith("http://localhost");
-const port = isLocal ? new URL(baseURL).port || "3000" : undefined;
 
 export default defineConfig({
   testDir: "./e2e",
+  globalSetup: "./e2e/global-setup.ts",
   timeout: 90_000,
   // Realtime updates cross the internet and each one triggers a server
   // re-render, so assertions need room to settle when run against a
@@ -33,7 +35,8 @@ export default defineConfig({
   ...(isLocal
     ? {
         webServer: {
-          command: `npm run dev -- --port ${port}`,
+          // `npm run dev` pins 3001 itself.
+          command: "npm run dev",
           url: baseURL,
           reuseExistingServer: true,
           timeout: 120_000,
