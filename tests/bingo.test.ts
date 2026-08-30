@@ -278,3 +278,17 @@ describe("scoreFrom", () => {
     expect(scoreFrom([{ marked: true, isFree: true }])).toBe(0);
   });
 });
+
+describe("timed mode never wins on a line", () => {
+  it("is not a bingo even with a complete row", () => {
+    expect(hasBingo([0, 1, 2, 3, 4], SIZE, "timed")).toBe(false);
+  });
+
+  it("is not a bingo even with every square marked", () => {
+    expect(hasBingo(ALL, SIZE, "timed")).toBe(false);
+  });
+
+  it("never reports one-away, since there is no line to complete", () => {
+    expect(isOneAway([0, 1, 2, 3], SIZE, "timed")).toBe(false);
+  });
+});

@@ -15,5 +15,10 @@ export default defineConfig({
   test: {
     include: ["tests/**/*.test.ts"],
     environment: "node",
+    // Integration setup signs users in against the real project and backs off
+    // when Supabase throttles concurrent auth; the default 10s hook budget cuts
+    // that short.
+    hookTimeout: 40_000,
+    testTimeout: 30_000,
   },
 });

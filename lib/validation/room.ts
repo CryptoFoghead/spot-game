@@ -32,6 +32,7 @@ export const gameModeSchema = z.enum([
   "double",
   "four_corners",
   "points",
+  "timed",
 ]);
 
 export const GAME_MODES = [
@@ -40,4 +41,5 @@ export const GAME_MODES = [
   { value: "four_corners", label: "Four Corners", hint: "All four corners" },
   { value: "blackout", label: "Blackout", hint: "Every square" },
   { value: "points", label: "Points", hint: "Any line; ranked by points" },
+  { value: "timed", label: "Timed", hint: "Beat the clock; most squares wins" },
 ] as const;

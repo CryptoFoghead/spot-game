@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ActivityFeed, type ActivityEntry } from "@/components/game/activity-feed";
+import { Countdown } from "@/components/room/countdown";
 import { RoomQRCode } from "@/components/room/room-qr-code";
 import { SpectatorLive } from "@/components/room/spectator-live";
 import { assignHues } from "@/lib/crowd";
@@ -17,6 +18,7 @@ type Spectator = {
   gameMode: string;
   gameTitle: string;
   winnerPlayerId: string | null;
+  endsAt: string | null;
   players: Array<{
     id: string;
     nickname: string;
@@ -61,6 +63,16 @@ export default async function RoomTvPage(props: PageProps<"/room/[code]/tv">) {
           <h1 className="font-display text-5xl leading-none font-extrabold sm:text-6xl">
             {room.gameTitle}
           </h1>
+          {room.endsAt ? (
+            <div className="mt-3">
+              <Countdown
+                endsAt={room.endsAt}
+                roomId={room.roomId}
+                active={room.status === "active"}
+                size="lg"
+              />
+            </div>
+          ) : null}
         </div>
 
         <div className="flex items-center gap-5">

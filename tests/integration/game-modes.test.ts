@@ -120,12 +120,14 @@ describeLive("game modes agree between SQL and TypeScript", () => {
     expect(partial.hasBingo).toBe(false);
   });
 
+  // `timed` used to be the example here; it is implemented now, so this uses
+  // `endless`, which remains deliberately unbuilt.
   it("rejects a mode the server does not implement", async () => {
     const { error } = await supabase.rpc("create_room", {
       p_game_template_id: AIRPORT_BINGO_ID,
       p_host_token: testToken("host"),
       p_host_nickname: "Modes",
-      p_game_mode: "timed",
+      p_game_mode: "endless",
     });
     expect(error?.message).toMatch(/unsupported game mode/);
   });

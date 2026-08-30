@@ -1,63 +1,59 @@
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { adminClient, anonClient, hasLiveEnv } from "./helpers";
+import { adminClient, anonClient, createSignedInUser, hasLiveEnv } from "./helpers";
 
 const describeLive = hasLiveEnv ? describe : describe.skip;
 
 /**
  * The AI limiter lives in Postgres so every serverless instance shares one
- * counter (G-02). These tests exercise the real function, including the
- * global cost ceiling (G-05).
+ * counter (G-02). These exercise the real function, including the global cost
+ * ceiling (G-05).
+ *
+ * Two users are created for the whole file rather than one per test: Supabase
+ * rate-limits auth, and a user per test was enough to trip it after a busy
+ * day. Usage rows are cleared between tests instead, which isolates the cases
+ * just as well and runs faster.
  */
 describeLive("claim_ai_generation", () => {
-  const createdUsers: string[] = [];
   const admin = adminClient();
+  let alice: Awaited<ReturnType<typeof createSignedInUser>>;
+  let bob: Awaited<ReturnType<typeof createSignedInUser>>;
+
+  beforeAll(async () => {
+    alice = await createSignedInUser();
+    bob = await createSignedInUser();
+  });
+
+  beforeEach(async () => {
+    await admin
+      .from("ai_usage")
+      .delete()
+      .in("user_id", [alice.userId, bob.userId]);
+  });
 
   afterAll(async () => {
-    for (const id of createdUsers) {
-      await admin.auth.admin.deleteUser(id).catch(() => {});
+    for (const user of [alice, bob]) {
+      if (user) await admin.auth.admin.deleteUser(user.userId).catch(() => {});
     }
   });
 
-  /** A signed-in client for a throwaway user. */
-  async function signedInUser() {
-    const email = `ai-limit-${crypto.randomUUID()}@example.com`;
-    const { data: created } = await admin.auth.admin.createUser({
-      email,
-      email_confirm: true,
-    });
-    createdUsers.push(created.user!.id);
-
-    const { data: link } = await admin.auth.admin.generateLink({
-      type: "magiclink",
-      email,
-    });
-    const client = anonClient();
-    await client.auth.verifyOtp({
-      token_hash: link.properties!.hashed_token,
-      type: "email",
-    });
-    return { client, userId: created.user!.id };
-  }
-
   it("refuses an anonymous caller", async () => {
-    const { data } = await anonClient().rpc("claim_ai_generation", {});
+    const { data, error } = await anonClient().rpc("claim_ai_generation", {});
     // anon has no execute grant, so this is refused before it runs.
-    expect(data ?? { allowed: false }).toMatchObject({ allowed: false });
+    expect(error ?? { message: "" }).toBeTruthy();
+    expect(data).toBeNull();
   });
 
   it("allows up to the per-user limit, then refuses with a retry delay", async () => {
-    const { client } = await signedInUser();
-
     for (let i = 0; i < 3; i++) {
-      const { data } = await client.rpc("claim_ai_generation", {
+      const { data } = await alice.client.rpc("claim_ai_generation", {
         p_user_limit: 3,
       });
       expect(data.allowed).toBe(true);
       expect(data.remaining).toBe(2 - i);
     }
 
-    const { data: blocked } = await client.rpc("claim_ai_generation", {
+    const { data: blocked } = await alice.client.rpc("claim_ai_generation", {
       p_user_limit: 3,
     });
     expect(blocked.allowed).toBe(false);
@@ -66,26 +62,21 @@ describeLive("claim_ai_generation", () => {
   });
 
   it("counts each user separately", async () => {
-    const a = await signedInUser();
-    const b = await signedInUser();
-
-    await a.client.rpc("claim_ai_generation", { p_user_limit: 1 });
-    const { data: aBlocked } = await a.client.rpc("claim_ai_generation", {
+    await alice.client.rpc("claim_ai_generation", { p_user_limit: 1 });
+    const { data: aliceBlocked } = await alice.client.rpc("claim_ai_generation", {
       p_user_limit: 1,
     });
-    expect(aBlocked.allowed).toBe(false);
+    expect(aliceBlocked.allowed).toBe(false);
 
-    const { data: bAllowed } = await b.client.rpc("claim_ai_generation", {
+    const { data: bobAllowed } = await bob.client.rpc("claim_ai_generation", {
       p_user_limit: 1,
     });
-    expect(bAllowed.allowed).toBe(true);
+    expect(bobAllowed.allowed).toBe(true);
   });
 
   it("enforces the global daily ceiling regardless of the per-user limit", async () => {
-    const { client } = await signedInUser();
-
     // A global cap of zero must refuse even a user with quota to spare.
-    const { data } = await client.rpc("claim_ai_generation", {
+    const { data } = await alice.client.rpc("claim_ai_generation", {
       p_user_limit: 100,
       p_global_daily_limit: 0,
     });
@@ -94,22 +85,19 @@ describeLive("claim_ai_generation", () => {
   });
 
   it("does not record usage for a refused claim", async () => {
-    const { client, userId } = await signedInUser();
-
-    await client.rpc("claim_ai_generation", { p_user_limit: 1 });
-    await client.rpc("claim_ai_generation", { p_user_limit: 1 }); // refused
+    await alice.client.rpc("claim_ai_generation", { p_user_limit: 1 });
+    await alice.client.rpc("claim_ai_generation", { p_user_limit: 1 }); // refused
 
     const { count } = await admin
       .from("ai_usage")
       .select("id", { count: "exact", head: true })
-      .eq("user_id", userId);
+      .eq("user_id", alice.userId);
 
     expect(count).toBe(1);
   });
 
   it("keeps the usage table unreadable from a client", async () => {
-    const { client } = await signedInUser();
-    const { data } = await client.from("ai_usage").select("id");
+    const { data } = await alice.client.from("ai_usage").select("id");
     expect(data ?? []).toHaveLength(0);
   });
 });

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Leaderboard } from "@/components/game/leaderboard";
 import { PlayBoard } from "@/components/game/play-board";
 import { WinnerOverlay } from "@/components/game/winner-overlay";
+import { Countdown } from "@/components/room/countdown";
 import { RoomLive } from "@/components/room/room-live";
 import { Badge } from "@/components/ui/badge";
 import { ActivityFeed } from "@/components/game/activity-feed";
@@ -54,6 +55,13 @@ export default async function PlayRoomPage(
           <Badge variant={room.status === "active" ? "default" : "secondary"}>
             {room.status === "active" ? "● LIVE" : room.status}
           </Badge>
+          {room.endsAt ? (
+            <Countdown
+              endsAt={room.endsAt}
+              roomId={room.id}
+              active={room.status === "active"}
+            />
+          ) : null}
           <RoomLive
             roomId={room.id}
             playerId={me.id}

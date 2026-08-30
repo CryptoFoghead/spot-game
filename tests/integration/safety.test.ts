@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from "vitest";
 
-import { adminClient, anonClient, hasLiveEnv } from "./helpers";
+import { adminClient, anonClient, createSignedInUser, hasLiveEnv } from "./helpers";
 
 const describeLive = hasLiveEnv ? describe : describe.skip;
 
@@ -66,26 +66,8 @@ describeLive("report_game (PRD §55)", () => {
 describeLive("delete_my_account (PRD §57)", () => {
   const admin = adminClient();
 
-  async function signedInUser() {
-    const email = `delete-me-${crypto.randomUUID()}@example.com`;
-    const { data: created } = await admin.auth.admin.createUser({
-      email,
-      email_confirm: true,
-    });
-    const { data: link } = await admin.auth.admin.generateLink({
-      type: "magiclink",
-      email,
-    });
-    const client = anonClient();
-    await client.auth.verifyOtp({
-      token_hash: link.properties!.hashed_token,
-      type: "email",
-    });
-    return { client, userId: created.user!.id };
-  }
-
   it("removes the user, their profile and their games", async () => {
-    const { client, userId } = await signedInUser();
+    const { client, userId } = await createSignedInUser();
 
     const { data: game } = await client
       .from("game_templates")

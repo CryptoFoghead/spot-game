@@ -21,7 +21,7 @@ Everything known to be missing, incomplete, or deferred. This is the running to-
 | G-20 | P2 | **Creator profiles** | PRD §7 excludes these from the initial build. `profiles` is populated but unread. Worth doing once there are community creators to have profiles. |
 | G-22 | P3 | **Monetization** (PRD §59–60) | **Your business decision**, plus a Stripe account and keys. The PRD deliberately defers this until gameplay is proven. |
 | G-24 | P3 | **Custom domain** | **Your choice of domain.** Changing it means updating `NEXT_PUBLIC_SITE_URL` *and* the Supabase redirect URLs, or magic links and QR codes break. |
-| — | — | **`timed` and `endless` game modes** | Deliberately not built. Unlike the other modes these are room *lifecycle* variations, not win conditions, so they need a timer/expiry design rather than a scoring rule. |
+| — | — | **`endless` game mode** | Still deliberately unbuilt — it needs a "never ends" lifecycle design rather than a scoring rule. (`timed` is now implemented.) |
 
 ---
 
@@ -61,4 +61,5 @@ Everything known to be missing, incomplete, or deferred. This is the running to-
 - **Room codes are 4 digits and unique only among reachable rooms.** Fine now. PRD §20 says migrate to 6-character alphanumeric when volume grows.
 - **The E2E suite is a localhost gate.** Running it against the deployment is flaky for harness reasons (BUG_LIST B-10a). Verify production deliberately instead.
 - **Sentry per-key rate limits need a Business plan** ($80/mo), so volume is bounded in our own code instead: 20 events per browser session and 30 per minute per server instance, on top of filtering control-flow throws and mobile network noise. See `lib/sentry-budget.ts`.
+- **Supabase rate-limits auth**, and the integration suite signs users in. Heavy repeated runs exhaust it for a while; `createSignedInUser` backs off and reports it clearly, and each suite reuses a couple of users rather than creating one per test. If several files fail at once with "Request rate limit reached", wait a few minutes rather than debugging the code.
 - **Enabling integration tests in CI** would mean putting Supabase credentials in a public repo's secrets. Deliberately not done: the unit suite runs in CI, the integration suite runs locally against the real project.

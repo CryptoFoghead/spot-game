@@ -33,7 +33,8 @@ export type BingoMode =
   | "blackout"
   | "double"
   | "four_corners"
-  | "points";
+  | "points"
+  | "timed";
 
 /** Corner positions of a card, used by four-corners mode. */
 export function cornerPositions(cardSize: number): number[] {
@@ -53,6 +54,10 @@ export function hasBingo(
   mode: BingoMode = "classic"
 ): boolean {
   const marked = new Set(markedPositions);
+
+  // Timed rounds are won on score at the deadline, never on a line — a line
+  // win would end a ten-minute game in ninety seconds.
+  if (mode === "timed") return false;
 
   if (mode === "blackout") {
     return marked.size >= cardSize * cardSize;
@@ -92,6 +97,7 @@ export function isOneAway(
   mode: BingoMode = "classic"
 ): boolean {
   const marked = new Set(markedPositions);
+  if (mode === "timed") return false;
   if (hasBingo(marked, cardSize, mode)) return false;
 
   if (mode === "blackout") {

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { CopyLinkButton } from "@/components/room/copy-link-button";
+import { Countdown } from "@/components/room/countdown";
 import { HostControls, RemovePlayerButton } from "@/components/room/host-controls";
 import { RoomLive } from "@/components/room/room-live";
 import { RoomQRCode } from "@/components/room/room-qr-code";
@@ -47,6 +48,13 @@ export default async function HostRoomPage(
         <span className="text-sm text-muted-foreground capitalize">
           {room.gameMode}
         </span>
+        {room.endsAt ? (
+          <Countdown
+            endsAt={room.endsAt}
+            roomId={room.id}
+            active={room.status === "active"}
+          />
+        ) : null}
         <RoomLive
           roomId={room.id}
           playerId={snapshot.me?.id ?? null}

@@ -11,6 +11,8 @@ export type RoomSnapshot = {
     gameMode: string;
     continueAfterWin: boolean;
     winnerPlayerId: string | null;
+    durationSeconds: number | null;
+    endsAt: string | null;
   };
   isHost: boolean;
   me: {

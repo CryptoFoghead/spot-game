@@ -50,12 +50,19 @@ export async function startRoomFromGame(
 
   const token = newGuestToken();
   const supabase = await createClient();
+  const durationRaw = Number(formData.get("duration_seconds"));
+  const duration =
+    mode.data === "timed" && Number.isFinite(durationRaw) && durationRaw > 0
+      ? durationRaw
+      : null;
+
   const { data, error } = await supabase.rpc("create_room", {
     p_game_template_id: gameId.data,
     p_host_token: token,
     p_host_nickname: nickname.data,
     p_game_mode: mode.data,
     p_continue_after_win: formData.get("continue_after_win") !== "off",
+    p_duration_seconds: duration,
   });
 
   if (error || !data) return { error: friendly(error?.message) };
@@ -124,6 +131,19 @@ export async function resumeRoom(_p: RoomFormState, f: FormData) {
 }
 export async function endRoom(_p: RoomFormState, f: FormData) {
   return hostAction("end_room", f);
+}
+
+/** Settles a timed room whose clock has run out. Idempotent server-side. */
+export async function finishTimedRoom(roomId: string): Promise<RoomFormState> {
+  const id = idSchema.safeParse(roomId);
+  if (!id.success) return { error: "Unknown room." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("finish_timed_room", {
+    p_room_id: id.data,
+  });
+  if (error) return { error: friendly(error.message) };
+  return {};
 }
 
 export async function removePlayer(
