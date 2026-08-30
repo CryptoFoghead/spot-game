@@ -12,8 +12,11 @@ export default defineConfig({
       "@": import.meta.dirname,
     },
   },
+  // Component tests are .tsx. Vitest 4 transforms JSX through oxc without
+  // configuration; per-file `@vitest-environment jsdom` keeps everything else
+  // on node, which is faster and closer to how the rest of this suite runs.
   test: {
-    include: ["tests/**/*.test.ts"],
+    include: ["tests/**/*.test.{ts,tsx}"],
     environment: "node",
     // Integration setup signs users in against the real project and backs off
     // when Supabase throttles concurrent auth; the default 10s hook budget cuts

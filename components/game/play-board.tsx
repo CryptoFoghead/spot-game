@@ -51,24 +51,34 @@ export function PlayBoard({
     setMarked(square.id, optimistic);
     setPendingIds((current) => new Set(current).add(square.id));
 
-    const result = await toggleSquare(roomCode, square.id);
+    try {
+      const result = await toggleSquare(roomCode, square.id);
 
-    setPendingIds((current) => {
-      const next = new Set(current);
-      next.delete(square.id);
-      return next;
-    });
+      if (!result.ok) {
+        setMarked(square.id, !optimistic);
+        setMessage(result.error ?? "Could not update. Try again.");
+        return;
+      }
 
-    if (!result.ok) {
+      // Keep the authoritative value even if it disagrees with the guess.
+      setMarked(square.id, result.marked ?? optimistic);
+      // Score, leaderboard and winner state live in the server render.
+      scheduleRefresh();
+    } catch {
+      // A server action REJECTS on a dead network rather than returning a
+      // failed result. Without this branch the tile kept its optimistic mark
+      // while the database had none — the board said "spotted" and the score
+      // said 0 — and the square stayed pending, so it was dead for the rest
+      // of the game even after the network came back (B-20).
       setMarked(square.id, !optimistic);
-      setMessage(result.error ?? "Could not update. Try again.");
-      return;
+      setMessage("You're offline — that tap didn't save. Try again.");
+    } finally {
+      setPendingIds((current) => {
+        const next = new Set(current);
+        next.delete(square.id);
+        return next;
+      });
     }
-
-    // Keep the authoritative value even if it disagrees with the guess.
-    setMarked(square.id, result.marked ?? optimistic);
-    // Score, leaderboard and winner state live in the server render.
-    scheduleRefresh();
   }
 
   useEffect(() => {

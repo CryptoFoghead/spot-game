@@ -71,13 +71,20 @@ export function AIGenerator({
     formData.set("game_id", gameId);
     formData.set("text", suggestion.text);
     formData.set("difficulty", suggestion.difficulty);
-    const result = await addSquare({}, formData);
-    setSavingIndex(null);
-    if (result.error) {
-      setError(result.error);
-      return;
+    try {
+      const result = await addSquare({}, formData);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setSuggestions((current) => current.filter((_, i) => i !== index));
+    } catch {
+      // Same shape as B-20: a rejected action left this suggestion spinning
+      // on "saving" forever, with nothing said about why.
+      setError("Could not save that square. Check your connection.");
+    } finally {
+      setSavingIndex(null);
     }
-    setSuggestions((current) => current.filter((_, i) => i !== index));
   }
 
   function edit(index: number, text: string) {
