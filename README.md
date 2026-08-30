@@ -97,3 +97,4 @@ expired rooms are marked and deleted past 30-day retention. Check it with
 | [docs/BUG_LIST.md](docs/BUG_LIST.md) | Defects, root causes, and fixes |
 | `node scripts/metrics.js` | Product metrics, moderation queue and housekeeping status |
 | [docs/RELEASE_AUDIT.md](docs/RELEASE_AUDIT.md) | MVP requirements marked PASS/PARTIAL |
+| [docs/PHONE_TEST.md](docs/PHONE_TEST.md) | Two-device test checklist — the last MVP acceptance step |

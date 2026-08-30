@@ -17,7 +17,7 @@ Everything known to be missing, incomplete, or deferred. This is the running to-
 
 | ID | P | Gap | Needs |
 |---|---|---|---|
-| G-01 | P0 | **Phone-to-phone test** (PRD §74) | **You and one other person**, two devices, ideally separate networks. Test backgrounding, screen lock, dead zones, refresh, rapid taps. The last MVP acceptance step; automation cannot answer whether it's fun. |
+| G-01 | P0 | **Phone-to-phone test** (PRD §74) | **You and one other person**, two devices, ideally separate networks. Step-by-step checklist ready in [PHONE_TEST.md](PHONE_TEST.md). The last MVP acceptance step; automation cannot answer whether it is fun. |
 | G-20 | P2 | **Creator profiles** | PRD §7 excludes these from the initial build. `profiles` is populated but unread. Worth doing once there are community creators to have profiles. |
 | G-22 | P3 | **Monetization** (PRD §59–60) | **Your business decision**, plus a Stripe account and keys. The PRD deliberately defers this until gameplay is proven. |
 | G-24 | P3 | **Custom domain** | **Your choice of domain.** Changing it means updating `NEXT_PUBLIC_SITE_URL` *and* the Supabase redirect URLs, or magic links and QR codes break. |
