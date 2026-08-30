@@ -69,8 +69,15 @@ Migrations live in `supabase/migrations` and are applied with:
 npx supabase db push --linked
 ```
 
-Seed data (28 categories, 8 starter games, 320 squares) is in
-`supabase/seed.sql`, applied with `--include-seed`.
+Seed data is `supabase/seed.sql` (28 categories and the original 8 games) plus
+the content packs in `supabase/seeds/`. All of it applies together:
+
+```bash
+npx supabase db push --linked --include-seed
+```
+
+The packs used to be applied by hand, so a fresh environment silently got 8
+games instead of 13. `config.toml` now globs `./seeds/*.sql`.
 
 Housekeeping runs hourly inside Postgres via `pg_cron` (`spot-maintenance`):
 expired rooms are marked and deleted past 30-day retention. Check it with
