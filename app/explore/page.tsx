@@ -50,10 +50,20 @@ export default async function ExplorePage(props: PageProps<"/explore">) {
         ? builder.order("title")
         : builder.order("play_count", { ascending: false }).order("title");
 
-  const [{ data: games }, { data: categories }] = await Promise.all([
-    builder.limit(60),
-    supabase.from("categories").select("slug, name").order("sort_order"),
-  ]);
+  const [{ data: games }, { data: categories }, { data: trending }] =
+    await Promise.all([
+      builder.limit(60),
+      supabase.from("categories").select("slug, name").order("sort_order"),
+      // Trending is measured from actual rooms played, not view counts (§52).
+      supabase.rpc("trending_games", { p_days: 7, p_limit: 6 }),
+    ]);
+
+  const trendingGames = (trending ?? []) as Array<{
+    slug: string | null;
+    title: string;
+    rooms: number;
+  }>;
+  const showTrending = !query && !activeCategory && trendingGames.length > 0;
 
   /** Preserves the other filters when changing one of them. */
   function hrefWith(changes: Record<string, string | null>) {
@@ -99,6 +109,28 @@ export default async function ExplorePage(props: PageProps<"/explore">) {
           </Button>
         ) : null}
       </form>
+
+      {showTrending ? (
+        <section className="mt-6">
+          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+            Trending this week
+          </h2>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {trendingGames.map((game) =>
+              game.slug ? (
+                <Link key={game.slug} href={`/games/${game.slug}`}>
+                  <Badge variant="secondary">
+                    {game.title}
+                    <span className="ml-1.5 opacity-60">
+                      {game.rooms} {game.rooms === 1 ? "room" : "rooms"}
+                    </span>
+                  </Badge>
+                </Link>
+              ) : null
+            )}
+          </div>
+        </section>
+      ) : null}
 
       <div className="mt-4 flex flex-wrap gap-2">
         {SORTS.map((option) => (

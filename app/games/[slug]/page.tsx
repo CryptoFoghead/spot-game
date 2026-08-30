@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { DuplicateButton } from "@/components/game/duplicate-button";
+import { RateGame } from "@/components/game/rate-game";
 import { ReportGame } from "@/components/game/report-game";
+import { SaveGameButton } from "@/components/game/save-game-button";
 import { StartGameButton } from "@/components/game/start-game-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,7 +18,7 @@ async function loadGame(slug: string) {
   const { data: game } = await supabase
     .from("game_templates")
     .select(
-      "id, creator_id, title, slug, description, category, content_rating, free_center, card_size"
+      "id, creator_id, title, slug, description, category, content_rating, free_center, card_size, source_game_template_id"
     )
     .eq("slug", slug)
     .eq("status", "published")
@@ -44,13 +46,32 @@ export default async function GameDetailPage(props: PageProps<"/games/[slug]">) 
   if (!game) notFound();
 
   const supabase = await createClient();
-  const { data: squares, count } = await supabase
-    .from("game_squares")
-    .select("id, text", { count: "exact" })
-    .eq("game_template_id", game.id)
-    .eq("is_active", true)
-    .order("sort_order")
-    .limit(8);
+  const [{ data: squares, count }, { data: rating }, { data: saved }, { data: source }] =
+    await Promise.all([
+      supabase
+        .from("game_squares")
+        .select("id, text", { count: "exact" })
+        .eq("game_template_id", game.id)
+        .eq("is_active", true)
+        .order("sort_order")
+        .limit(8),
+      supabase.rpc("game_rating", { p_game_template_id: game.id }),
+      user
+        ? supabase
+            .from("game_saves")
+            .select("id")
+            .eq("game_template_id", game.id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      // Remix lineage has been recorded since Phase 2; now it's shown (§53).
+      game.source_game_template_id
+        ? supabase
+            .from("game_templates")
+            .select("title, slug, status, visibility")
+            .eq("id", game.source_game_template_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
 
   const isOwner = user !== null && user.id === game.creator_id;
 
@@ -70,11 +91,37 @@ export default async function GameDetailPage(props: PageProps<"/games/[slug]">) 
         <p className="mt-2 max-w-xl text-muted-foreground">{game.description}</p>
       ) : null}
 
+      <div className="mt-4">
+        <RateGame
+          gameId={game.id}
+          average={Number(rating?.average ?? 0)}
+          count={Number(rating?.count ?? 0)}
+          yours={rating?.yours ?? null}
+          canRate={user !== null}
+        />
+      </div>
+
+      {source && (source.status === "published" || isOwner) ? (
+        <p className="mt-3 text-sm text-muted-foreground">
+          Remixed from{" "}
+          {source.slug && source.status === "published" ? (
+            <Link href={`/games/${source.slug}`} className="underline">
+              {source.title}
+            </Link>
+          ) : (
+            source.title
+          )}
+        </p>
+      ) : null}
+
       <div className="mt-6">
         <StartGameButton gameId={game.id} />
       </div>
 
       <div className="mt-4 flex flex-wrap gap-3">
+        {user ? (
+          <SaveGameButton gameId={game.id} initiallySaved={saved !== null} />
+        ) : null}
         {user ? (
           <DuplicateButton gameId={game.id} />
         ) : (
