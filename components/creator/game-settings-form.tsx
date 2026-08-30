@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { withNetworkGuard } from "@/lib/forms";
 import { CONTENT_RATINGS, VISIBILITIES } from "@/lib/validation/game";
 
 type CategoryOption = { slug: string; name: string };
@@ -27,8 +28,11 @@ type Props = {
 
 const initialState: FormState = {};
 
+const guardedUpdate = withNetworkGuard(updateGameSettings);
+const guardedCreate = withNetworkGuard(createGame);
+
 export function GameSettingsForm({ categories, gameId, defaults }: Props) {
-  const action = gameId ? updateGameSettings : createGame;
+  const action = gameId ? guardedUpdate : guardedCreate;
   const [state, formAction, pending] = useActionState(action, initialState);
 
   return (

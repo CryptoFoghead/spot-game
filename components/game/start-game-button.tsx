@@ -7,9 +7,16 @@ import { NativeSelect } from "@/components/creator/native-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { withNetworkGuard } from "@/lib/forms";
 import { GAME_MODES } from "@/lib/validation/room";
 
 const initialState: RoomFormState = {};
+
+// Starting the room is step one of every game (B-21).
+const startGame = withNetworkGuard(
+  startRoomFromGame,
+  "Couldn't start the game. Check your connection and try again."
+);
 
 const DURATIONS = [
   { value: 300, label: "5 minutes" },
@@ -20,10 +27,7 @@ const DURATIONS = [
 ] as const;
 
 export function StartGameButton({ gameId }: { gameId: string }) {
-  const [state, formAction, pending] = useActionState(
-    startRoomFromGame,
-    initialState
-  );
+  const [state, formAction, pending] = useActionState(startGame, initialState);
   const [mode, setMode] = useState<string>("classic");
 
   return (

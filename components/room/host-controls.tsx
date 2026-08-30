@@ -11,19 +11,36 @@ import {
   type RoomFormState,
 } from "@/app/actions/rooms";
 import { Button } from "@/components/ui/button";
+import { withNetworkGuard } from "@/lib/forms";
 
 const initialState: RoomFormState = {};
+
+// The host is holding the room together. Losing the whole page to an error
+// boundary because one tap could not reach the server is the worst possible
+// moment for it (B-21).
+const OFFLINE = "Couldn't reach the game. Check your connection and try again.";
+const guardedStart = withNetworkGuard(startRoom, OFFLINE);
+const guardedPause = withNetworkGuard(pauseRoom, OFFLINE);
+const guardedResume = withNetworkGuard(resumeRoom, OFFLINE);
+const guardedEnd = withNetworkGuard(endRoom, OFFLINE);
+const guardedRemove = withNetworkGuard(removePlayer, OFFLINE);
 
 type Props = { roomId: string; roomCode: string; status: string };
 
 export function HostControls({ roomId, roomCode, status }: Props) {
-  const [startState, startAction, starting] = useActionState(startRoom, initialState);
-  const [pauseState, pauseAction, pausing] = useActionState(pauseRoom, initialState);
-  const [resumeState, resumeAction, resuming] = useActionState(
-    resumeRoom,
+  const [startState, startAction, starting] = useActionState(
+    guardedStart,
     initialState
   );
-  const [endState, endAction, ending] = useActionState(endRoom, initialState);
+  const [pauseState, pauseAction, pausing] = useActionState(
+    guardedPause,
+    initialState
+  );
+  const [resumeState, resumeAction, resuming] = useActionState(
+    guardedResume,
+    initialState
+  );
+  const [endState, endAction, ending] = useActionState(guardedEnd, initialState);
 
   const error =
     startState.error ?? pauseState.error ?? resumeState.error ?? endState.error;
@@ -93,7 +110,10 @@ export function RemovePlayerButton({
   roomCode: string;
   playerId: string;
 }) {
-  const [state, formAction, pending] = useActionState(removePlayer, initialState);
+  const [state, formAction, pending] = useActionState(
+    guardedRemove,
+    initialState
+  );
 
   return (
     <form

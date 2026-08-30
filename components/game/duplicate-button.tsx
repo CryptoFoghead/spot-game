@@ -4,11 +4,14 @@ import { useActionState } from "react";
 
 import { duplicateGame, type FormState } from "@/app/actions/games";
 import { Button } from "@/components/ui/button";
+import { withNetworkGuard } from "@/lib/forms";
 
 const initialState: FormState = {};
 
+const guardedDuplicateGame = withNetworkGuard(duplicateGame, "Couldn't reach the server. Check your connection and try again.");
+
 export function DuplicateButton({ gameId }: { gameId: string }) {
-  const [state, formAction, pending] = useActionState(duplicateGame, initialState);
+  const [state, formAction, pending] = useActionState(guardedDuplicateGame, initialState);
 
   return (
     <form action={formAction} className="flex flex-col gap-1">

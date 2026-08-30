@@ -4,8 +4,13 @@ import { useActionState } from "react";
 
 import { archiveGame, publishGame, type FormState } from "@/app/actions/games";
 import { Button } from "@/components/ui/button";
+import { withNetworkGuard } from "@/lib/forms";
 
 const initialState: FormState = {};
+
+const OFFLINE = "Couldn't reach the server. Check your connection and try again.";
+const guardedPublish = withNetworkGuard(publishGame, OFFLINE);
+const guardedArchive = withNetworkGuard(archiveGame, OFFLINE);
 
 export function PublishControls({
   gameId,
@@ -15,11 +20,11 @@ export function PublishControls({
   status: string;
 }) {
   const [publishState, publishAction, publishing] = useActionState(
-    publishGame,
+    guardedPublish,
     initialState
   );
   const [archiveState, archiveAction, archiving] = useActionState(
-    archiveGame,
+    guardedArchive,
     initialState
   );
 

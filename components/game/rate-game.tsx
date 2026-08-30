@@ -4,8 +4,11 @@ import { Star } from "lucide-react";
 import { useActionState } from "react";
 
 import { rateGame, type CommunityState } from "@/app/actions/community";
+import { withNetworkGuard } from "@/lib/forms";
 
 const initialState: CommunityState = {};
+
+const guardedRateGame = withNetworkGuard(rateGame, "Couldn't reach the server. Check your connection and try again.");
 
 /** 1–5 stars (PRD §54). Each star is its own submit button so it works
  *  without client-side state juggling and stays keyboard accessible. */
@@ -22,7 +25,7 @@ export function RateGame({
   yours: number | null;
   canRate: boolean;
 }) {
-  const [state, formAction, pending] = useActionState(rateGame, initialState);
+  const [state, formAction, pending] = useActionState(guardedRateGame, initialState);
 
   return (
     <div className="flex flex-col gap-1">
