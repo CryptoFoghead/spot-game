@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   completedSets,
+  cornerPositions,
   hasBingo,
   isOneAway,
   scoreFrom,
@@ -196,6 +197,69 @@ describe("isOneAway (PRD §32)", () => {
   // A completed line does not mean blackout is close.
   it("is false in blackout when only a line is complete", () => {
     expect(isOneAway([0, 1, 2, 3, 4], SIZE, "blackout")).toBe(false);
+  });
+});
+
+describe("game modes (PRD §13)", () => {
+  const CORNERS = [0, 4, 20, 24];
+
+  describe("four_corners", () => {
+    it("wins on all four corners", () => {
+      expect(hasBingo(CORNERS, SIZE, "four_corners")).toBe(true);
+    });
+
+    it("does not win on three corners", () => {
+      expect(hasBingo([0, 4, 20], SIZE, "four_corners")).toBe(false);
+    });
+
+    it("does not win on a completed row", () => {
+      expect(hasBingo([0, 1, 2, 3, 4], SIZE, "four_corners")).toBe(false);
+    });
+
+    it("is one away with three corners", () => {
+      expect(isOneAway([0, 4, 20], SIZE, "four_corners")).toBe(true);
+    });
+  });
+
+  describe("double", () => {
+    const topRow = [0, 1, 2, 3, 4];
+    const leftCol = [0, 5, 10, 15, 20];
+
+    it("wins on two completed lines", () => {
+      expect(hasBingo([...topRow, ...leftCol], SIZE, "double")).toBe(true);
+    });
+
+    it("does not win on one completed line", () => {
+      expect(hasBingo(topRow, SIZE, "double")).toBe(false);
+    });
+
+    it("is one away with one line complete and another a square short", () => {
+      expect(isOneAway([...topRow, 5, 10, 15], SIZE, "double")).toBe(true);
+    });
+
+    it("is not one away with only one line and nothing else close", () => {
+      expect(isOneAway(topRow, SIZE, "double")).toBe(false);
+    });
+  });
+
+  describe("points", () => {
+    it("wins on a single line, like classic", () => {
+      expect(hasBingo([0, 1, 2, 3, 4], SIZE, "points")).toBe(true);
+    });
+
+    it("does not win on four of a line", () => {
+      expect(hasBingo([0, 1, 2, 3], SIZE, "points")).toBe(false);
+    });
+  });
+
+  describe("cornerPositions", () => {
+    it("returns the four corners of a 5x5 card", () => {
+      expect(cornerPositions(SIZE)).toEqual(CORNERS);
+    });
+
+    it("scales to other card sizes", () => {
+      expect(cornerPositions(3)).toEqual([0, 2, 6, 8]);
+    });
   });
 });
 

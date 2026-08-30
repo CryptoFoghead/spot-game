@@ -7,6 +7,7 @@ import { NativeSelect } from "@/components/creator/native-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { GAME_MODES } from "@/lib/validation/room";
 
 const initialState: RoomFormState = {};
 
@@ -30,9 +31,12 @@ export function StartGameButton({ gameId }: { gameId: string }) {
           <Label htmlFor="game_mode" className="text-xs">
             Mode
           </Label>
-          <NativeSelect id="game_mode" name="game_mode" className="w-32">
-            <option value="classic">Classic</option>
-            <option value="blackout">Blackout</option>
+          <NativeSelect id="game_mode" name="game_mode" className="w-40">
+            {GAME_MODES.map((mode) => (
+              <option key={mode.value} value={mode.value}>
+                {mode.label} — {mode.hint}
+              </option>
+            ))}
           </NativeSelect>
         </div>
       </div>

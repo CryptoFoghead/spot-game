@@ -28,11 +28,24 @@ export function winningSets(cardSize: number): number[][] {
   return sets;
 }
 
-export type BingoMode = "classic" | "blackout";
+export type BingoMode =
+  | "classic"
+  | "blackout"
+  | "double"
+  | "four_corners"
+  | "points";
+
+/** Corner positions of a card, used by four-corners mode. */
+export function cornerPositions(cardSize: number): number[] {
+  const last = cardSize - 1;
+  return [0, last, last * cardSize, last * cardSize + last];
+}
 
 /**
- * Classic wins on any complete line; blackout needs every position.
- * A FREE center counts as marked because it is stored marked.
+ * Win conditions by mode (PRD §13, §24). A FREE center counts as marked
+ * because it is stored marked. Mirrors `card_has_bingo` in SQL.
+ *
+ * Points mode wins on a line like classic; only its scoring differs.
  */
 export function hasBingo(
   markedPositions: Iterable<number>,
@@ -43,6 +56,12 @@ export function hasBingo(
 
   if (mode === "blackout") {
     return marked.size >= cardSize * cardSize;
+  }
+  if (mode === "four_corners") {
+    return cornerPositions(cardSize).every((position) => marked.has(position));
+  }
+  if (mode === "double") {
+    return completedSets(marked, cardSize).length >= 2;
   }
   return winningSets(cardSize).some((set) =>
     set.every((position) => marked.has(position))
@@ -77,6 +96,20 @@ export function isOneAway(
 
   if (mode === "blackout") {
     return cardSize * cardSize - marked.size === 1;
+  }
+  if (mode === "four_corners") {
+    return (
+      cornerPositions(cardSize).filter((position) => !marked.has(position))
+        .length === 1
+    );
+  }
+  if (mode === "double") {
+    // One line already complete, and another a single square short.
+    const complete = completedSets(marked, cardSize).length;
+    const nearlyComplete = winningSets(cardSize).some(
+      (set) => set.filter((position) => !marked.has(position)).length === 1
+    );
+    return complete === 1 && nearlyComplete;
   }
   return winningSets(cardSize).some(
     (set) => set.filter((position) => !marked.has(position)).length === 1

@@ -25,4 +25,19 @@ export const roomCodeSchema = z
   .trim()
   .regex(/^\d{4}$/, "Room codes are 4 digits");
 
-export const gameModeSchema = z.enum(["classic", "blackout"]);
+/** Win conditions the server implements (PRD §13). */
+export const gameModeSchema = z.enum([
+  "classic",
+  "blackout",
+  "double",
+  "four_corners",
+  "points",
+]);
+
+export const GAME_MODES = [
+  { value: "classic", label: "Classic", hint: "Any line wins" },
+  { value: "double", label: "Double", hint: "Two lines win" },
+  { value: "four_corners", label: "Four Corners", hint: "All four corners" },
+  { value: "blackout", label: "Blackout", hint: "Every square" },
+  { value: "points", label: "Points", hint: "Any line; ranked by points" },
+] as const;
