@@ -28,6 +28,14 @@ Two failure classes, found by asking what happens on a bad connection rather tha
 
 Also added the project's first component tests (8) and six tests for what a real table does — arriving late, a latecomer joining a co-op game in progress, two people both called Sam, marking after the host ends it. All six passed first run.
 
+### Two phones, in the test suite (`e2e/two-phones.spec.ts`)
+
+Four tests in two **mobile** browser contexts — Pixel 7 and Galaxy S9+, touch rather than hover — because the desktop contexts in `multiplayer.spec.ts` are not the situation this app is for. They use Playwright's real `context.setOffline()` instead of a stubbed `fetch`, so the bad-wifi fixes are pinned to browser behaviour rather than to a simulation of it.
+
+Covered: two phones sharing one card in Together mode with a tap on one appearing on the other; a tap that cannot reach the server (B-20); joining with no signal (B-21); and catching up after a network drop.
+
+**Each offline test was checked by reverting its fix and watching it fail.** That mattered — the recovery test passes with the `visibilitychange`/`online` listeners removed, because `setOffline` closes the socket cleanly and the pre-existing resync-on-resubscribe already handles it. So it is honestly labelled: it covers the outcome, not B-22, whose silent-socket case nothing here can reproduce.
+
 ### The entitlement seam (G-28)
 
 Built now because the alternative is threading a tier check through every limit later. There is still nothing to buy — what is missing is a way to *pay*, not a way to *be* a supporter.
