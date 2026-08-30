@@ -33,6 +33,14 @@ export async function SiteHeader() {
               >
                 My Games
               </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                nativeButton={false}
+                render={<Link href="/dashboard/account" />}
+              >
+                Account
+              </Button>
               <form action={signOut}>
                 <Button variant="outline" size="sm" type="submit">
                   Sign out

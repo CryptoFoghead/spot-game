@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { DuplicateButton } from "@/components/game/duplicate-button";
+import { ReportGame } from "@/components/game/report-game";
 import { StartGameButton } from "@/components/game/start-game-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -90,6 +91,10 @@ export default async function GameDetailPage(props: PageProps<"/games/[slug]">) 
             Edit
           </Button>
         ) : null}
+      </div>
+
+      <div className="mt-6">
+        <ReportGame gameId={game.id} />
       </div>
 
       <section className="mt-10">
