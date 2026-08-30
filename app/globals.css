@@ -60,10 +60,14 @@
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  /* Darkened from 0.556: muted text sitting on a muted background only
+     reached 4.34:1, under the WCAG AA 4.5:1 minimum. */
+  --muted-foreground: oklch(0.512 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+  /* Darkened from 0.577 so destructive text on its 10% tint background
+     meets the WCAG AA 4.5:1 contrast minimum (was 4:1). */
+  --destructive: oklch(0.505 0.213 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
@@ -95,10 +99,12 @@
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
+  /* Lightened for the same reason on dark backgrounds. */
+  --muted-foreground: oklch(0.75 0 0);
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
+  /* Lightened so destructive text clears 4.5:1 on the dark tint. */
+  --destructive: oklch(0.75 0.17 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);

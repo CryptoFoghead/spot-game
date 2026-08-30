@@ -54,7 +54,7 @@ browser. `scripts/scan-secrets.js` verifies that against the built bundle.
 | `npm run lint` | ESLint |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run test` | Vitest — unit plus integration against the live database |
-| `npm run e2e` | Playwright, including the PRD §73 mandatory multiplayer scenario |
+| `npm run e2e` | Playwright: the PRD §73 mandatory multiplayer scenario plus an automated accessibility audit |
 | `E2E_BASE_URL=https://… npm run e2e` | Run the suite against a deployment |
 
 `npm run test` includes integration tests that hit the real Supabase project;
@@ -94,4 +94,5 @@ expired rooms are marked and deleted past 30-day retention. Check it with
 | [docs/BUILD_STATUS.md](docs/BUILD_STATUS.md) | What was built, phase by phase |
 | [docs/GAP_LIST.md](docs/GAP_LIST.md) | Everything not yet built, prioritised |
 | [docs/BUG_LIST.md](docs/BUG_LIST.md) | Defects, root causes, and fixes |
+| `node scripts/metrics.js` | Product metrics, moderation queue and housekeeping status |
 | [docs/RELEASE_AUDIT.md](docs/RELEASE_AUDIT.md) | MVP requirements marked PASS/PARTIAL |

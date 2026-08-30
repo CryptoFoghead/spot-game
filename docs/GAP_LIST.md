@@ -2,7 +2,7 @@
 
 Everything known to be missing, incomplete, or deferred. This is the running to-do list; **[BUG_LIST.md](BUG_LIST.md)** tracks things that are broken rather than absent.
 
-**Status:** MVP is live at https://spot-game-green.vercel.app. Nothing below blocks the core game.
+**Status:** live at https://spot-game-green.vercel.app. All P1–P3 items are done except the two that need your decision, and one that needs a human.
 
 ## How to use this file
 
@@ -13,56 +13,51 @@ Everything known to be missing, incomplete, or deferred. This is the running to-
 
 ---
 
-## P0 — before putting this in front of real users
+## ⛳ Still open
 
-| ID | Gap | Why it matters | Notes |
+| ID | P | Gap | Needs |
 |---|---|---|---|
-| G-01 | **Phone-to-phone test** (PRD §74) | This is the only remaining MVP acceptance step. Two real people, two devices, separate networks. Test backgrounding, screen lock, dead zones, refresh, rapid taps. | Needs humans, not automation. Everything else is verified. |
-| G-02 | ~~AI rate limiter is in-memory~~ | ✅ **Done 2026-08-29** | Moved to Postgres (`ai_usage` + `claim_ai_generation`), serialised per user by advisory lock, fails closed. Verified in production: quota shared across instances, invalid requests consume none. |
-| G-03 | **No error alerting** | ⚠️ **Partly done 2026-08-29** — all errors now route through `lib/observability.ts` as structured `spot_error` JSON lines, so they are searchable and one file is the seam for a service. **Still needed: something that actually notifies you.** | Add a Vercel log-drain alert matching `"tag":"spot_error"`, or drop in a Sentry DSN. Needs your account. |
-| G-04 | ~~Nothing enforces or sweeps `expires_at`~~ | ✅ **Done 2026-08-29** | `sweep_rooms()` marks expired rooms and deletes terminal rooms past 30-day retention (cascading players/cards/events). Scheduled hourly via pg_cron as `spot-maintenance`; `maintenance_status()` proves it is scheduled and active. |
-| G-05 | ~~AI cost has no ceiling~~ | ✅ **Done 2026-08-29** | Global cap of 500 generations/day enforced in `claim_ai_generation` independently of per-user limits; breaching it logs a `spot_warning`. Still worth setting a budget alert in the Anthropic console as a second line of defence. |
+| G-01 | P0 | **Phone-to-phone test** (PRD §74) | **You and one other person**, two devices, ideally separate networks. Test backgrounding, screen lock, dead zones, refresh, rapid taps. The last MVP acceptance step; automation cannot answer whether it's fun. |
+| G-03 | P0 | **Error alerting** — errors are structured and searchable, but nothing notifies you | A Vercel log-drain alert matching `"tag":"spot_error"`, or a Sentry DSN. Needs your account. |
+| G-20 | P2 | **Creator profiles** | PRD §7 excludes these from the initial build. `profiles` is populated but unread. Worth doing once there are community creators to have profiles. |
+| G-22 | P3 | **Monetization** (PRD §59–60) | **Your business decision**, plus a Stripe account and keys. The PRD deliberately defers this until gameplay is proven. |
+| G-24 | P3 | **Custom domain** | **Your choice of domain.** Changing it means updating `NEXT_PUBLIC_SITE_URL` *and* the Supabase redirect URLs, or magic links and QR codes break. |
+| — | — | **`timed` and `endless` game modes** | Deliberately not built. Unlike the other modes these are room *lifecycle* variations, not win conditions, so they need a timer/expiry design rather than a scoring rule. |
 
-## P1 — soon after launch
+---
 
-| ID | Gap | Why it matters | Notes |
+## ✅ Completed
+
+| ID | P | Gap | Resolution |
 |---|---|---|---|
-| G-06 | **No CI** | Tests only run when someone remembers locally. A broken commit can reach `master` and deploy. | GitHub Actions on pull requests: lint, typecheck, test, build. Repo is public so Actions minutes are free. Note the live integration tests need Supabase secrets — either add them as repo secrets or split unit-only for CI. |
-| G-07 | **PWA icons are SVG only** | Android install prompts and iOS Add to Home Screen want raster PNGs (192×192, 512×512, maskable). Install may look wrong or be refused. | Generate PNGs from `public/icon.svg`, add to `app/manifest.ts`. |
-| G-08 | **Data retention: partly done** (PRD §57) | Room data now expires and is deleted after 30 days by the sweeper (G-04), and AI usage rows after 7. **Still missing: a user-facing "delete my account" path.** | Account deletion cascades cleanly already — the schema uses `on delete cascade` throughout; it just needs a UI and a server action. |
-| G-09 | **Analytics events not implemented** (PRD §58) | No visibility into the north-star metric — completed multiplayer rooms per week (§92). You can't tell if the product is working. | `room_events` already records most of this server-side; a read model or lightweight product analytics would surface it. |
-| G-10 | **Moderation / Report Game missing** (PRD §55) | Public user-generated content with no report path. Becomes urgent the moment strangers can publish. | Schema for `reports` is specified in the PRD but not created. Currently mitigated: public discovery only shows the 8 seeded games. |
-| G-11 | **No formal accessibility audit** (PRD §63) | Basics are in place — semantic buttons, `aria-pressed`, `aria-label`s, marked state not colour-only, focus rings, `motion-safe` animations — but nothing has been tested with a screen reader or keyboard-only. | Run axe, then a real VoiceOver/NVDA pass on the board and join flow. |
-| G-12 | **No OpenGraph images** (PRD §76) | Shared links look plain. Metadata is server-rendered but there's no OG image. | Next's `opengraph-image` convention; could render game title dynamically. |
-| G-13 | **Explore has no search** | Only category chips. Fine for 8 games, useless at 100. | PRD §52 puts search in the community phase. |
-| G-14 | **"One square away" 🔥 indicator** (PRD §32) | Deliberately removed — it was inferred from score, which is not what one-away means. The leaderboard is less exciting without it. | Needs real line analysis exposed per player. `completedSets()` in `lib/game/bingo.ts` is most of the way there; needs a "one short of any line" variant computed server-side. |
-| G-15 | **Presence counts tabs, not people** | Two tabs from one player shows "2 online". Cosmetic but visibly wrong. | Presence key is the player id; dedupe by key in the sync handler. |
-
-## P2 — community phase (PRD §52)
-
-| ID | Gap | Why it matters | Notes |
-|---|---|---|---|
-| G-16 | **Explore: Trending / Popular / New sections** | Discovery is a flat list. | `play_count` is already tracked and incremented on room creation. |
-| G-17 | **Ratings** (PRD §54) | No quality signal on community games. | Table spec exists in the PRD. |
-| G-18 | **Remix attribution not shown** (PRD §53) | `source_game_template_id` is recorded on every duplicate but never displayed. The data is there; the UI isn't. | "Remixed from X" on the game detail page. |
-| G-19 | **"Saved" tab in My Games** | PRD §42 lists Created / Drafts / Saved; only the first two exist. | PRD explicitly allows omitting this for MVP. |
-| G-20 | **No creator profiles** | `profiles` table exists and is populated on signup, but nothing reads it. | PRD §7 excludes it from the initial build. |
-
-## P3 — later / optional
-
-| ID | Gap | Why it matters | Notes |
-|---|---|---|---|
-| G-21 | **Only classic and blackout modes** | PRD §13 lists double, four_corners, timed, points, endless as future modes. | Schema and the `game_mode` CHECK already allow all of them; only classic/blackout are accepted by `create_room` and implemented in `card_has_bingo`. |
-| G-22 | **Monetization not built** (PRD §59–60) | Deliberately deferred — PRD says don't let payment block proving gameplay. | Stripe Checkout + a `subscriptions` table, webhook-authoritative. |
-| G-23 | **Points mode scoring** | `game_squares.points` exists and defaults to 1, but score is always a count of marked squares. | PRD §50 describes points mode as future. |
-| G-24 | **Custom domain** | Currently on `spot-game-green.vercel.app`. | You already own `tourneymind.com` through Vercel, so the flow is familiar. Note: changing the domain means updating `NEXT_PUBLIC_SITE_URL` **and** the Supabase redirect URLs. |
-| G-25 | **Unused starter assets** | `public/` still has Next's default `next.svg`, `vercel.svg`, `window.svg`, `globe.svg`, `file.svg`. Confirmed unreferenced. | Harmless; delete when tidying. |
+| G-02 | P0 | AI rate limiter was in-memory | Moved to Postgres (`ai_usage` + `claim_ai_generation`), serialised per user by advisory lock, fails closed. Verified in production: quota shared across instances, invalid requests consume none. |
+| G-04 | P0 | Nothing enforced or swept `expires_at` | `sweep_rooms()` marks expired rooms and deletes terminal rooms past 30-day retention. Scheduled hourly in-database via pg_cron; `maintenance_status()` makes the schedule observable. |
+| G-05 | P0 | AI cost had no ceiling | Global cap of 500 generations/day, enforced independently of per-user limits, with a warning logged when it holds users back. |
+| G-06 | P1 | No CI | GitHub Actions on PRs and `master`: lint, typecheck, unit tests, build, secret scan. Integration tests skip without `.env.local`, so no database secrets are needed in a public repo. |
+| G-07 | P1 | PWA icons were SVG only | PNG 192/512/maskable/apple-touch generated from the SVG by `scripts/generate-icons.js`, wired into the manifest and layout metadata. |
+| G-08 | P1 | Data retention (PRD §57) | Rooms expire and are deleted after 30 days; AI usage after 7. Plus account deletion below. |
+| G-08b | P1 | No "delete my account" | `delete_my_account()` removes the user, profile, games and usage. Rooms they host are deliberately **not** destroyed — `host_user_id` is nulled so a game in progress doesn't vanish under other players. Confirmation is typing DELETE. |
+| G-09 | P1 | No analytics | `product_metrics()` computes the north-star metric (completed multiplayer rooms, players per room) and the funnel from `room_events` — server-side truth rather than browser beacons. `node scripts/metrics.js` prints it. |
+| G-10 | P1 | No moderation path | `report_game()` accepts reports on published games, **anonymously by design** — requiring an account to report unsafe content suppresses reports. Rate limited per reporter. Queue is service-role only. |
+| G-11 | P1 | No accessibility audit | Automated axe pass across 5 pages plus the host and play screens, and a keyboard-only board test, wired into the E2E suite. **Found and fixed two real WCAG AA contrast failures** (destructive text at 4:1, muted text at 4.34:1). |
+| G-12 | P1 | No OpenGraph images | Default share card plus a per-game card showing title, description, category and square count. |
+| G-13 | P1 | Explore had no search | Search over title and description, plus Popular/New/A–Z sorting, filters preserved across changes. Search input escaped so it cannot alter the PostgREST filter. |
+| G-14 | P1 | 🔥 one-away indicator missing | Restored, computed correctly: a property of the card's *lines*, not a score threshold. In SQL and TypeScript, verified to agree. |
+| G-15 | P1 | Presence counted tabs | Now counts distinct players. |
+| G-16 | P2 | No trending section | Trending measured from actual rooms played in the last 7 days, not view counts. |
+| G-17 | P2 | No ratings | 1–5 stars, one vote per user (upsert replaces). Aggregates public, individual votes not. |
+| G-18 | P2 | Remix attribution unused | Now shown. The lineage had been recorded since Phase 2 — only the UI was missing. |
+| G-19 | P2 | No Saved tab | Saved tab in My Games, backed by a per-user list private under RLS. |
+| G-21 | P3 | Only classic and blackout | Added four corners, double, and points. Implemented in SQL and mirrored in TypeScript, with integration tests proving they agree for every mode. |
+| G-23 | P3 | Points mode scoring | Points mode ranks by square point values; score and marked count now reported separately. |
+| G-25 | P3 | Unused starter assets | Removed. |
 
 ---
 
 ## Operational notes (not gaps, but don't get caught out)
 
-- **Supabase free tier pauses after 7 days of inactivity.** The app will look broken until you restore it from the dashboard. If SPOT gets real usage, this is the first thing to upgrade.
-- **Room codes are 4 digits and unique only among reachable rooms.** Fine now. PRD §20 says migrate to 6-character alphanumeric when volume grows — at a few thousand concurrent rooms, collision retries start failing.
 - **This project owns port 3001.** Another app on this machine uses 3000. `npm run dev`, `npm run start`, Playwright and `.claude/launch.json` all pin 3001, and `GET /api/health` identifies the app so a port collision fails loudly (see README).
-- **The E2E suite is a localhost gate.** Running it against the deployment is flaky for harness reasons (see [BUG_LIST.md](BUG_LIST.md) B-09). Verify production deliberately instead.
+- **Supabase free tier pauses after 7 days of inactivity.** The app will look broken until you restore it from the dashboard. If SPOT gets real usage, this is the first thing to upgrade.
+- **Room codes are 4 digits and unique only among reachable rooms.** Fine now. PRD §20 says migrate to 6-character alphanumeric when volume grows.
+- **The E2E suite is a localhost gate.** Running it against the deployment is flaky for harness reasons (BUG_LIST B-10a). Verify production deliberately instead.
+- **Enabling integration tests in CI** would mean putting Supabase credentials in a public repo's secrets. Deliberately not done: the unit suite runs in CI, the integration suite runs locally against the real project.
