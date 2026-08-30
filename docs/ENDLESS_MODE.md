@@ -1,6 +1,13 @@
 # Endless mode — design proposal
 
-**Status:** proposed, not built. Needs a decision before any code.
+**Status:** designed, **deliberately not built** — deferred 2026-08-30 pending the
+phone test (G-01).
+
+The design is settled; what is missing is evidence. Nobody has played SPOT for
+three hours, so the problem this solves is currently reasoning rather than
+observation. Build it if a real session ends with "we finished, now what?" —
+and if that never comes up, this document has done its job by not becoming a
+migration.
 
 The PRD reserves the name `endless` in the schema (§13) and says nothing about
 what it does. The database CHECK already allows the value; nothing implements

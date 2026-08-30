@@ -21,7 +21,7 @@ Everything known to be missing, incomplete, or deferred. This is the running to-
 | G-20 | P2 | **Creator profiles** | PRD §7 excludes these from the initial build. `profiles` is populated but unread. Worth doing once there are community creators to have profiles. |
 | G-22 | P3 | **Monetization** (PRD §59–60) | **Your business decision**, plus a Stripe account and keys. The PRD deliberately defers this until gameplay is proven. **The seam is now built** (G-28) — what is missing is a way to pay, not a way to be a supporter. |
 | G-24 | P3 | **Custom domain** | **Your choice of domain.** Changing it means updating `NEXT_PUBLIC_SITE_URL` *and* the Supabase redirect URLs, or magic links and QR codes break. |
-| — | — | **`endless` game mode** | **Design written, awaiting a decision** — see [ENDLESS_MODE.md](ENDLESS_MODE.md). The short version: "never ends" is already `continue_after_win`, so endless has to mean *rounds* or it should not be built at all. |
+| — | — | **`endless` game mode** | **Designed, deferred pending G-01** — see [ENDLESS_MODE.md](ENDLESS_MODE.md). "Never ends" is already `continue_after_win`, so endless has to mean *rounds* or not be built at all. The design is settled; the evidence is not. Revisit if a real session ends with "we finished, now what?" |
 
 ---
 
