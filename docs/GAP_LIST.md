@@ -51,6 +51,8 @@ Everything known to be missing, incomplete, or deferred. This is the running to-
 | G-21 | P3 | Only classic and blackout | Added four corners, double, and points. Implemented in SQL and mirrored in TypeScript, with integration tests proving they agree for every mode. |
 | G-23 | P3 | Points mode scoring | Points mode ranks by square point values; score and marked count now reported separately. |
 | G-25 | P3 | Unused starter assets | Removed. |
+| G-26 | P2 | Nothing for two people at one table | **Co-op mode ("Together").** One shared card for the whole room instead of one each: `player_cards.room_player_id` becomes nullable, a partial unique index keeps it to exactly one shared card per room, and `player_card_squares.marked_by` records who spotted what. Authorisation changes shape — a personal card requires you to *be* the owner, a shared card requires you to be an *active player in the room* — and both halves are tested. The team wins together; each player still scores on what they personally found, so there is a reason to look. |
+| G-27 | P2 | Content assumed a crowd to watch | **Date Night Bingo** and **Coffee Shop Bingo**, 40 squares each, written to prompt conversation rather than just observation ("A table where it is obviously a first date"). These are the two-people-at-a-table case the co-op mode serves. |
 
 ---
 

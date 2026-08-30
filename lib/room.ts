@@ -13,6 +13,7 @@ export type RoomSnapshot = {
     winnerPlayerId: string | null;
     durationSeconds: number | null;
     endsAt: string | null;
+    sharedCard: boolean;
   };
   isHost: boolean;
   me: {
@@ -38,6 +39,7 @@ export type RoomSnapshot = {
     text: string;
     isFree: boolean;
     marked: boolean;
+    markedBy: string | null;
   }>;
   gameTitle: string;
 };

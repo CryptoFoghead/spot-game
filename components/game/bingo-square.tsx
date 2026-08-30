@@ -67,12 +67,17 @@ export function BingoSquare({
   interactive,
   pending,
   onToggle,
+  spotterFill,
+  spotterName,
 }: {
   square: CardSquare;
   roomCode?: string;
   interactive: boolean;
   pending?: boolean;
   onToggle?: (square: CardSquare) => void;
+  /** Shared cards only: the hue of whoever spotted this square. */
+  spotterFill?: string;
+  spotterName?: string;
 }) {
   const disabled = !interactive || square.isFree;
 
@@ -80,7 +85,7 @@ export function BingoSquare({
     <button
       type="button"
       aria-pressed={square.marked}
-      aria-label={`${square.text}${square.marked ? " (spotted)" : ""}`}
+      aria-label={`${square.text}${square.marked ? (spotterName ? ` (spotted by ${spotterName})` : " (spotted)") : ""}`}
       disabled={disabled}
       onClick={onToggle ? () => onToggle(square) : undefined}
       className={cn(
@@ -99,6 +104,15 @@ export function BingoSquare({
       )}
     >
       {square.marked && !square.isFree ? <Stamp /> : null}
+      {/* Shared card: a corner flag in the spotter's colour, so you can see
+          at a glance who found what without reading anything. */}
+      {spotterFill && square.marked && !square.isFree ? (
+        <span
+          className="pointer-events-none absolute bottom-0 left-0 size-2.5 rounded-tr-md"
+          style={{ backgroundColor: spotterFill }}
+          aria-hidden
+        />
+      ) : null}
       <span className="relative line-clamp-5">{square.text}</span>
     </button>
   );

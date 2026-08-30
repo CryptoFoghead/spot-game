@@ -1,6 +1,6 @@
 # BUILD STATUS
 
-**Current phase:** Phase 9 — Deployed and live 🚀
+**Current phase:** Live, plus co-op "Together" mode and date-night content 🚀
 **Live URL:** https://spot-game-green.vercel.app
 **Remaining:** PRD §74 phone-to-phone test (needs two real people on two devices)
 
@@ -13,6 +13,42 @@
 | [RELEASE_AUDIT.md](RELEASE_AUDIT.md) | Point-in-time PASS/PARTIAL audit of every MVP requirement. |
 | [BUILD_PLAN.md](BUILD_PLAN.md) | The original phase-by-phase implementation plan. |
 | [PRD.md](PRD.md) | Source of truth for requirements. |
+
+## Together mode and date-night content (2026-08-29)
+
+Built to serve a case the PRD did not anticipate: **two people at one table**, rather than a group watching a crowd. It is also the first thing built with repeat play in mind — if a couple plays it twice, that says something about whether a subscription is realistic.
+
+### Co-op mode — "Together"
+
+One shared card for the room instead of one card each.
+
+- **Schema** (`0024`): `player_cards.room_player_id` becomes nullable — a shared card is owned by the room, not a player. A **partial unique index** on `room_id where room_player_id is null` makes "exactly one shared card per room" a database guarantee rather than a convention. `player_card_squares.marked_by` records who spotted each square.
+- **Authorisation** (`0025`) changes shape between the two card kinds, and this is the part worth reading twice: a **personal** card requires the caller to *be* the owner; a **shared** card requires them to be an *active player in the room*. Both halves are tested — that the right people can mark it, and that strangers and removed players still cannot.
+- **Scoring** is deliberately split. `has_bingo` is team-wide (you win together), but each player's score counts only the squares they personally marked, so there is still a reason to keep looking rather than let the other person find everything.
+- **Concurrency:** two people sharing one card *will* tap the same square at once. `pg_advisory_xact_lock` on the card serialises them, so the result is coherent instead of a lost update. Tested.
+- **UI:** the header reads "Together: 4 / You spotted 1" instead of "You: 4", and each marked square carries a small corner flag in the spotter's colour — you can see who found what without reading anything. The colour is backed by the name in the accessible label, never carried by colour alone (PRD §63).
+
+### Content
+
+**Date Night Bingo** and **Coffee Shop Bingo**, 40 squares each, written to prompt conversation rather than only observation — "A table where it is obviously a first date", "A couple who have run out of things to say".
+
+### Bug found and fixed
+
+`rooms_game_mode_check` did not include `coop`, so every co-op room failed at the insert *after* the function had accepted the mode (BUG_LIST **B-17**). Caught by the new tests on their first run. The lesson is small and general: validating in the function is not enough, because the table has the final say.
+
+### Quality gates
+
+| Gate | Result |
+|---|---|
+| Lint | clean |
+| Typecheck | clean |
+| Unit + integration | **195 passed** (up from 185; 10 new co-op tests) |
+| E2E | 10 passed |
+| Accessibility (axe) | 7 passed |
+| Production build | compiled |
+| Browser verification | Two players in one co-op room, same card, attribution flags correct |
+
+---
 
 ## Phase 9 (2026-08-29)
 
