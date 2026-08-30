@@ -41,6 +41,7 @@ npm run dev                  # http://localhost:3001
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Browser key — subject to RLS |
 | `SUPABASE_SECRET_KEY` | Server-only; bypasses RLS |
 | `AI_API_KEY` | Anthropic key for square generation. Optional — without it the AI endpoint returns a clean 503 and everything else works |
+| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | Error monitoring. Optional — without them errors still go to structured logs. The DSN is public by design |
 
 Anything not prefixed `NEXT_PUBLIC_` is server-only and must never reach the
 browser. `scripts/scan-secrets.js` verifies that against the built bundle.

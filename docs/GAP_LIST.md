@@ -18,7 +18,6 @@ Everything known to be missing, incomplete, or deferred. This is the running to-
 | ID | P | Gap | Needs |
 |---|---|---|---|
 | G-01 | P0 | **Phone-to-phone test** (PRD §74) | **You and one other person**, two devices, ideally separate networks. Test backgrounding, screen lock, dead zones, refresh, rapid taps. The last MVP acceptance step; automation cannot answer whether it's fun. |
-| G-03 | P0 | **Error alerting** — errors are structured and searchable, but nothing notifies you | A Vercel log-drain alert matching `"tag":"spot_error"`, or a Sentry DSN. Needs your account. |
 | G-20 | P2 | **Creator profiles** | PRD §7 excludes these from the initial build. `profiles` is populated but unread. Worth doing once there are community creators to have profiles. |
 | G-22 | P3 | **Monetization** (PRD §59–60) | **Your business decision**, plus a Stripe account and keys. The PRD deliberately defers this until gameplay is proven. |
 | G-24 | P3 | **Custom domain** | **Your choice of domain.** Changing it means updating `NEXT_PUBLIC_SITE_URL` *and* the Supabase redirect URLs, or magic links and QR codes break. |
@@ -32,6 +31,7 @@ Everything known to be missing, incomplete, or deferred. This is the running to-
 |---|---|---|---|
 | G-02 | P0 | AI rate limiter was in-memory | Moved to Postgres (`ai_usage` + `claim_ai_generation`), serialised per user by advisory lock, fails closed. Verified in production: quota shared across instances, invalid requests consume none. |
 | G-04 | P0 | Nothing enforced or swept `expires_at` | `sweep_rooms()` marks expired rooms and deletes terminal rooms past 30-day retention. Scheduled hourly in-database via pg_cron; `maintenance_status()` makes the schedule observable. |
+| G-03 | P0 | No error alerting | Sentry wired into the existing reportError seam, errors only (tracing and replay off — they bill separately and the org quota is shared with TourneyMind). Control-flow throws and mobile WebSocket noise filtered. Verified end to end: event accepted into project 4511997018636288. Email alerts on high-priority issues. |
 | G-05 | P0 | AI cost had no ceiling | Global cap of 500 generations/day, enforced independently of per-user limits, with a warning logged when it holds users back. |
 | G-06 | P1 | No CI | GitHub Actions on PRs and `master`: lint, typecheck, unit tests, build, secret scan. Integration tests skip without `.env.local`, so no database secrets are needed in a public repo. |
 | G-07 | P1 | PWA icons were SVG only | PNG 192/512/maskable/apple-touch generated from the SVG by `scripts/generate-icons.js`, wired into the manifest and layout metadata. |
