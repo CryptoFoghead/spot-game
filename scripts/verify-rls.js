@@ -30,6 +30,8 @@ const TABLES = [
   "player_cards",
   "player_card_squares",
   "room_events",
+  "user_entitlements",
+  "ai_usage",
 ];
 
 /** Tables an anonymous visitor is *supposed* to be able to read. */
@@ -125,7 +127,15 @@ async function tryDelete(table) {
   }
 
   // Server-only helper functions must not be callable directly.
-  for (const fn of ["generate_player_card", "hash_guest_token", "is_room_host", "card_has_bingo"]) {
+  for (const fn of [
+    "generate_player_card",
+    "hash_guest_token",
+    "is_room_host",
+    "card_has_bingo",
+    // Entitlements resolve server-side; a client asks entitlements_for_me().
+    "tier_for",
+    "ai_hourly_limit_for",
+  ]) {
     const res = await fetch(`${base}/rest/v1/rpc/${fn}`, {
       method: "POST",
       headers,
