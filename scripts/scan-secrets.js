@@ -4,13 +4,20 @@ const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
 
-const env = Object.fromEntries(
-  fs
-    .readFileSync(".env.local", "utf8")
-    .split("\n")
-    .filter((l) => l.includes("=") && !l.trim().startsWith("#"))
-    .map((l) => [l.slice(0, l.indexOf("=")).trim(), l.slice(l.indexOf("=") + 1).trim()])
-);
+// Locally the secrets live in .env.local; in CI they come from the
+// environment. Either way we only ever read them to search for leaks.
+const env = fs.existsSync(".env.local")
+  ? Object.fromEntries(
+      fs
+        .readFileSync(".env.local", "utf8")
+        .split("\n")
+        .filter((l) => l.includes("=") && !l.trim().startsWith("#"))
+        .map((l) => [
+          l.slice(0, l.indexOf("=")).trim(),
+          l.slice(l.indexOf("=") + 1).trim(),
+        ])
+    )
+  : process.env;
 
 // Values that must never appear anywhere the browser can read.
 const secrets = Object.entries(env).filter(
