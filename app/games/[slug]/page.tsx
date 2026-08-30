@@ -158,7 +158,11 @@ export default async function GameDetailPage(props: PageProps<"/games/[slug]">) 
         </div>
         {(count ?? 0) > 8 ? (
           <p className="mt-2 text-xs text-muted-foreground">
-            …and {(count ?? 0) - 8} more. Every player gets a different card.
+            {/* Together mode shares one card, so the old flat claim that
+                everyone gets a different one sits directly under a mode
+                picker that contradicts it. */}
+            …and {(count ?? 0) - 8} more. Cards are drawn from these — a
+            different one each, or one between you in Together.
           </p>
         ) : null}
       </section>
