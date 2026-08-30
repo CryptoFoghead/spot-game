@@ -31,7 +31,7 @@ export function WinnerOverlay({
         <p className="text-4xl motion-safe:animate-bounce" aria-hidden>
           🎉
         </p>
-        <p className="text-2xl font-extrabold tracking-tight">BINGO!</p>
+        <p className="font-display text-4xl font-extrabold">BINGO!</p>
         <p className="text-lg font-semibold uppercase">
           {isMe ? "You got bingo" : `${nickname} got bingo`}
         </p>

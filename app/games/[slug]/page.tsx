@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getUser } from "@/lib/auth";
+import { hueStyle } from "@/lib/crowd";
 import { createClient } from "@/lib/supabase/server";
 
 async function loadGame(slug: string) {
@@ -78,7 +79,7 @@ export default async function GameDetailPage(props: PageProps<"/games/[slug]">) 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="secondary">{game.category}</Badge>
+        <span className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold" style={hueStyle(game.category)}>{game.category}</span>
         <Badge variant="outline" className="capitalize">
           {game.content_rating}
         </Badge>
@@ -86,7 +87,7 @@ export default async function GameDetailPage(props: PageProps<"/games/[slug]">) 
           {count ?? 0} possible squares
         </span>
       </div>
-      <h1 className="mt-3 text-3xl font-extrabold tracking-tight">{game.title}</h1>
+      <h1 className="font-display mt-3 text-4xl leading-[1] font-extrabold">{game.title}</h1>
       {game.description ? (
         <p className="mt-2 max-w-xl text-muted-foreground">{game.description}</p>
       ) : null}

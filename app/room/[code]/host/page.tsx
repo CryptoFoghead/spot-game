@@ -54,12 +54,12 @@ export default async function HostRoomPage(
         />
       </div>
 
-      <h1 className="mt-3 text-2xl font-extrabold tracking-tight">{gameTitle}</h1>
+      <h1 className="font-display mt-3 text-3xl font-extrabold">{gameTitle}</h1>
 
       <p className="mt-4 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
         Scan to join
       </p>
-      <p className="font-mono text-5xl font-extrabold tracking-widest">
+      <p className="font-mono text-6xl leading-none font-extrabold tracking-[0.15em] text-primary tabular-nums">
         {room.code}
       </p>
 

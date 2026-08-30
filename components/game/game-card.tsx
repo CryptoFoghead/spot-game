@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { hueFill, hueStyle } from "@/lib/crowd";
 
 export type GameListItem = {
   slug: string | null;
@@ -14,23 +14,31 @@ export type GameListItem = {
 
 export function GameCard({ game }: { game: GameListItem }) {
   const inner = (
-    <Card className="h-full transition-colors hover:border-foreground/30">
-      <CardHeader>
-        <CardTitle className="text-base">{game.title}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-2">
+    <Card className="group h-full overflow-hidden transition-colors hover:border-primary/50">
+      {/* A hairline in the category's hue: colour identifies the world the
+          game belongs to, the same hue everywhere that category appears. */}
+      <div className="h-1 w-full" style={hueFill(game.category)} />
+      <CardContent className="flex flex-col gap-2 pt-4">
+        <h3 className="font-display text-base leading-tight font-bold">
+          {game.title}
+        </h3>
         {game.description ? (
           <p className="line-clamp-2 text-sm text-muted-foreground">
             {game.description}
           </p>
         ) : null}
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary">{game.category}</Badge>
-          <Badge variant="outline" className="capitalize">
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          <span
+            className="inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold"
+            style={hueStyle(game.category)}
+          >
+            {game.category}
+          </span>
+          <span className="text-xs text-muted-foreground capitalize">
             {game.content_rating}
-          </Badge>
+          </span>
           {game.square_count !== undefined ? (
-            <span className="text-xs text-muted-foreground">
+            <span className="ml-auto text-xs text-muted-foreground tabular-nums">
               {game.square_count} squares
             </span>
           ) : null}

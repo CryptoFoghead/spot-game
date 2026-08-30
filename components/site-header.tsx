@@ -14,7 +14,7 @@ export async function SiteHeader() {
       <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-2 px-4">
         <Link href="/" className="flex items-center gap-2 font-bold tracking-tight">
           <Eye className="size-5" aria-hidden />
-          <span className="text-lg">{siteConfig.name}</span>
+          <span className="font-display text-xl font-extrabold tracking-tight">{siteConfig.name}</span>
         </Link>
         <nav className="flex items-center gap-1" aria-label="Main">
           <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/explore" />}>

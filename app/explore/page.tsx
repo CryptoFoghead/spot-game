@@ -5,6 +5,7 @@ import { GameCard } from "@/components/game/game-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { hueStyle } from "@/lib/crowd";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Explore Games" };
@@ -80,7 +81,7 @@ export default async function ExplorePage(props: PageProps<"/explore">) {
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-10">
-      <h1 className="text-2xl font-bold tracking-tight">Explore Games</h1>
+      <h1 className="font-display text-4xl font-extrabold">Explore</h1>
 
       <form action="/explore" method="GET" className="mt-4 flex gap-2">
         {activeCategory ? (
@@ -142,19 +143,35 @@ export default async function ExplorePage(props: PageProps<"/explore">) {
         ))}
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        <Link href={hrefWith({ category: null })}>
+      {/* 28 categories wrapped to seven rows and pushed every game below the
+          fold. One scrolling row keeps the games visible, which is the point
+          of the page. */}
+      <div className="-mx-4 mt-3 flex snap-x gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <Link href={hrefWith({ category: null })} className="shrink-0 snap-start">
           <Badge variant={activeCategory ? "outline" : "secondary"}>All</Badge>
         </Link>
-        {(categories ?? []).map((category) => (
-          <Link key={category.slug} href={hrefWith({ category: category.slug })}>
-            <Badge
-              variant={activeCategory === category.slug ? "default" : "outline"}
+        {(categories ?? []).map((category) => {
+          const active = activeCategory === category.slug;
+          return (
+            <Link
+              key={category.slug}
+              href={hrefWith({ category: category.slug })}
+              className="shrink-0 snap-start"
             >
-              {category.name}
-            </Badge>
-          </Link>
-        ))}
+              {/* Selected chip fills with its own hue; the rest stay quiet so
+                  the colour marks the choice rather than shouting at once. */}
+              <span
+                className={
+                  "inline-flex whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold transition-colors " +
+                  (active ? "" : "border border-border text-muted-foreground hover:text-foreground")
+                }
+                style={active ? hueStyle(category.slug) : undefined}
+              >
+                {category.name}
+              </span>
+            </Link>
+          );
+        })}
       </div>
 
       {games && games.length > 0 ? (

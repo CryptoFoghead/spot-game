@@ -41,7 +41,7 @@ export default async function PlayRoomPage(
     <div className="mx-auto flex w-full max-w-lg flex-col gap-4 px-3 py-4">
       <header className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <h1 className="truncate font-bold tracking-tight">
+          <h1 className="font-display truncate text-lg font-bold">
             {snapshot.gameTitle}
           </h1>
           <p className="text-xs text-muted-foreground">
