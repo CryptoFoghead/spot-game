@@ -130,8 +130,10 @@ test("two players complete a live multiplayer game", async ({ browser }) => {
   }
 
   // --- Player B sees A's progress live, without reloading (PRD §87) ---
+  // Scoped to the leaderboard: the activity feed also names players, so an
+  // unscoped match now finds both lists.
   await expect(
-    playerB.getByRole("listitem").filter({ hasText: "PlayerAnn" })
+    playerB.locator("ol > li").filter({ hasText: "PlayerAnn" }).first()
   ).toContainText("4");
 
   // --- Player A completes the row: bingo ---

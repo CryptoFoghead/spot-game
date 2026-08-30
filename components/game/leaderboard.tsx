@@ -1,4 +1,4 @@
-import { hueFill } from "@/lib/crowd";
+import { assignHues } from "@/lib/crowd";
 import type { RoomSnapshot } from "@/lib/room";
 
 /**
@@ -16,6 +16,8 @@ export function Leaderboard({
   players: RoomSnapshot["players"];
   meId: string | null;
 }) {
+  const hues = assignHues(players.map((p) => p.id));
+
   return (
     <ol className="flex flex-col gap-1.5">
       {players.map((player, index) => {
@@ -33,7 +35,7 @@ export function Leaderboard({
             </span>
             <span
               className="size-2.5 shrink-0 rounded-full"
-              style={hueFill(player.id)}
+              style={{ backgroundColor: hues.get(player.id)?.fill }}
               aria-hidden
             />
             <span className="flex min-w-0 items-center gap-1.5">

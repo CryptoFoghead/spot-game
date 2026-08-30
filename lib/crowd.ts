@@ -47,6 +47,24 @@ export function hueFor(key: string): CrowdHue {
   return CROWD[hash(key) % CROWD.length];
 }
 
+/**
+ * Distinct hues for the people in one room.
+ *
+ * Hashing each id independently collided immediately — with four players two
+ * of them came out the same pink, which defeats the point of colouring them at
+ * all. Assigning by position in a stable id sort guarantees difference up to
+ * the size of the palette, and stays fixed as the leaderboard reorders.
+ *
+ * Past five players it wraps; a repeat then is unavoidable and still better
+ * than a coin flip at four.
+ */
+export function assignHues(ids: string[]): Map<string, CrowdHue> {
+  const ordered = [...ids].sort();
+  return new Map(
+    ordered.map((id, index) => [id, CROWD[index % CROWD.length]])
+  );
+}
+
 /** Inline style for a filled chip or dot in the crowd palette. */
 export function hueStyle(key: string): React.CSSProperties {
   const hue = hueFor(key);

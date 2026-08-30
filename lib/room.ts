@@ -40,6 +40,32 @@ export type RoomSnapshot = {
   gameTitle: string;
 };
 
+export type ActivityEntry = {
+  id: string;
+  type: string;
+  nickname: string | null;
+  playerId: string | null;
+  text: string | null;
+  at: string;
+};
+
+/** Recent room activity for a participant (PRD §51). */
+export async function loadRoomActivity(
+  roomCode: string,
+  roomId: string
+): Promise<ActivityEntry[]> {
+  const token = await readGuestToken(roomCode);
+  if (!token) return [];
+
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("get_room_activity", {
+    p_room_id: roomId,
+    p_token: token,
+    p_limit: 12,
+  });
+  return (data ?? []) as ActivityEntry[];
+}
+
 /**
  * Authoritative room state for the current viewer, identified by their guest
  * cookie. Returns null when they hold no valid seat in the room.

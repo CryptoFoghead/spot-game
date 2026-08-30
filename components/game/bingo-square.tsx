@@ -44,6 +44,21 @@ function Stamp() {
 }
 
 /**
+ * Tile text is sized to its own length rather than one size for all.
+ *
+ * A fixed 10px meant short squares looked lost in white space while the
+ * longest ones clipped mid-word (B-11). Scaling by length lets "Airport beer"
+ * read comfortably at arm's length and gives "Someone eating a full meal at
+ * the gate" the room it needs.
+ */
+function textSize(text: string): string {
+  if (text.length <= 16) return "text-[13px] leading-[1.1] sm:text-sm";
+  if (text.length <= 28) return "text-[11.5px] leading-[1.12] sm:text-[13px]";
+  if (text.length <= 44) return "text-[10px] leading-[1.14] sm:text-xs";
+  return "text-[9px] leading-[1.12] sm:text-[11px]";
+}
+
+/**
  * One tile. Marked state is carried by fill, the stamp, and border weight —
  * never by colour alone (PRD §63).
  */
@@ -69,7 +84,8 @@ export function BingoSquare({
       disabled={disabled}
       onClick={onToggle ? () => onToggle(square) : undefined}
       className={cn(
-        "relative flex aspect-square items-center justify-center overflow-hidden rounded-xl border-2 p-1 text-center text-[10px] leading-[1.15] font-medium break-words transition-[background-color,border-color,transform] duration-150 sm:p-2 sm:text-xs",
+        "relative flex aspect-square items-center justify-center overflow-hidden rounded-xl border-2 p-1 text-center font-medium break-words transition-[background-color,border-color,transform] duration-150 sm:p-1.5",
+        textSize(square.text),
         "focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
         // FREE is neither spotted nor spottable, so it reads as a third
         // state: inked rather than stamped.
@@ -83,7 +99,7 @@ export function BingoSquare({
       )}
     >
       {square.marked && !square.isFree ? <Stamp /> : null}
-      <span className="relative line-clamp-4">{square.text}</span>
+      <span className="relative line-clamp-5">{square.text}</span>
     </button>
   );
 }

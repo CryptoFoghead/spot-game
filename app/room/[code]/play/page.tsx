@@ -7,7 +7,8 @@ import { PlayBoard } from "@/components/game/play-board";
 import { WinnerOverlay } from "@/components/game/winner-overlay";
 import { RoomLive } from "@/components/room/room-live";
 import { Badge } from "@/components/ui/badge";
-import { loadRoomSnapshot } from "@/lib/room";
+import { ActivityFeed } from "@/components/game/activity-feed";
+import { loadRoomActivity, loadRoomSnapshot } from "@/lib/room";
 
 export const metadata: Metadata = { title: "Play" };
 
@@ -19,6 +20,7 @@ export default async function PlayRoomPage(
   if (!snapshot) notFound();
 
   const { room, me, players, card } = snapshot;
+  const activity = await loadRoomActivity(code, room.id);
 
   if (!me) {
     return (
@@ -104,6 +106,15 @@ export default async function PlayRoomPage(
         </h2>
         <Leaderboard players={players} meId={me.id} />
       </section>
+
+      {activity.length > 0 && room.status !== "lobby" ? (
+        <section>
+          <h2 className="mb-2 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+            Just spotted
+          </h2>
+          <ActivityFeed entries={activity} limit={6} />
+        </section>
+      ) : null}
 
       {winner ? (
         <WinnerOverlay

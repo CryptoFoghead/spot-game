@@ -8,6 +8,7 @@ import { RoomLive } from "@/components/room/room-live";
 import { RoomQRCode } from "@/components/room/room-qr-code";
 import { ShareButton } from "@/components/room/share-button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { clientEnv } from "@/lib/env";
 import { loadRoomSnapshot } from "@/lib/room";
 
@@ -70,6 +71,13 @@ export default async function HostRoomPage(
           <div className="flex flex-wrap gap-2">
             <ShareButton gameTitle={gameTitle} joinUrl={joinUrl} />
             <CopyLinkButton value={joinUrl} />
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link href={`/room/${room.code}/tv`} />}
+            >
+              Open room screen
+            </Button>
           </div>
         </div>
       </div>
