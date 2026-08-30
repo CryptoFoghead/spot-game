@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   completedSets,
   hasBingo,
+  isOneAway,
   scoreFrom,
   winningSets,
 } from "@/lib/game/bingo";
@@ -144,6 +145,57 @@ describe("completedSets", () => {
 
   it("returns nothing when no line is complete", () => {
     expect(completedSets([0, 1, 2], SIZE)).toHaveLength(0);
+  });
+});
+
+describe("isOneAway (PRD §32)", () => {
+  it("is true with four of a row marked", () => {
+    expect(isOneAway([0, 1, 2, 3], SIZE)).toBe(true);
+  });
+
+  it("is true with four of a column marked", () => {
+    expect(isOneAway([0, 5, 10, 15], SIZE)).toBe(true);
+  });
+
+  it("is true with four of a diagonal marked", () => {
+    expect(isOneAway([0, 6, 12, 18], SIZE)).toBe(true);
+  });
+
+  it("is false once the line is actually complete", () => {
+    expect(isOneAway([0, 1, 2, 3, 4], SIZE)).toBe(false);
+  });
+
+  it("is false on an empty card", () => {
+    expect(isOneAway([], SIZE)).toBe(false);
+  });
+
+  // The bug this indicator originally had: it fired on a card with no squares.
+  it("is false when only the FREE centre is marked", () => {
+    expect(isOneAway([FREE_CENTER], SIZE)).toBe(false);
+  });
+
+  it("is false for three of a line", () => {
+    expect(isOneAway([0, 1, 2], SIZE)).toBe(false);
+  });
+
+  it("counts the FREE centre toward a line", () => {
+    // Middle row needs 10,11,12,13,14; 12 is FREE and already marked.
+    expect(isOneAway([10, 11, FREE_CENTER, 13], SIZE)).toBe(true);
+  });
+
+  it("is true in blackout with exactly one square left", () => {
+    expect(isOneAway(ALL.filter((p) => p !== 7), SIZE, "blackout")).toBe(true);
+  });
+
+  it("is false in blackout with two squares left", () => {
+    expect(
+      isOneAway(ALL.filter((p) => p !== 7 && p !== 9), SIZE, "blackout")
+    ).toBe(false);
+  });
+
+  // A completed line does not mean blackout is close.
+  it("is false in blackout when only a line is complete", () => {
+    expect(isOneAway([0, 1, 2, 3, 4], SIZE, "blackout")).toBe(false);
   });
 });
 

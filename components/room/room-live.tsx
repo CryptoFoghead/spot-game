@@ -40,7 +40,16 @@ export function RoomLive({
     channel
       .on("broadcast", { event: "*" }, scheduleRefresh)
       .on("presence", { event: "sync" }, () => {
-        setOnlineCount(Object.keys(channel.presenceState()).length);
+        // Presence is keyed per connection, so one player with two tabs
+        // appears twice. Count distinct players, not sockets (G-15).
+        const state = channel.presenceState<{ playerId?: string | null }>();
+        const people = new Set<string>();
+        for (const [key, entries] of Object.entries(state)) {
+          for (const entry of entries) {
+            people.add(entry.playerId ?? key);
+          }
+        }
+        setOnlineCount(people.size);
       })
       .subscribe(async (status) => {
         if (status === "SUBSCRIBED") {

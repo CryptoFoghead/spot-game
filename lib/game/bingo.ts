@@ -60,6 +60,29 @@ export function completedSets(
   );
 }
 
+/**
+ * True when some line is one square from complete (PRD §32's 🔥).
+ *
+ * This is a property of the lines, not the score: "one away" means a row,
+ * column or diagonal has exactly one unmarked cell. Blackout is one away when
+ * a single cell anywhere remains. Mirrors `card_is_one_away` in SQL.
+ */
+export function isOneAway(
+  markedPositions: Iterable<number>,
+  cardSize: number,
+  mode: BingoMode = "classic"
+): boolean {
+  const marked = new Set(markedPositions);
+  if (hasBingo(marked, cardSize, mode)) return false;
+
+  if (mode === "blackout") {
+    return cardSize * cardSize - marked.size === 1;
+  }
+  return winningSets(cardSize).some(
+    (set) => set.filter((position) => !marked.has(position)).length === 1
+  );
+}
+
 /** Score = marked squares excluding the FREE center (PRD §50). */
 export function scoreFrom(
   squares: Array<{ marked: boolean; isFree: boolean }>

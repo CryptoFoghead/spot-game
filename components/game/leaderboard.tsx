@@ -1,9 +1,9 @@
 import type { RoomSnapshot } from "@/lib/room";
 
 /**
- * Scores only — never another player's card contents (PRD §32).
- * The 🔥 "one square away" hint needs real line analysis, not a score
- * threshold, so it waits for server-side bingo detection.
+ * Scores and status only — never another player's card contents (PRD §32).
+ * "One square away" is computed server-side from the card's lines, so it
+ * reveals that someone is close without revealing what they hold.
  */
 export function Leaderboard({
   players,
@@ -28,7 +28,16 @@ export function Leaderboard({
                 {index + 1}
               </span>
               <span className="font-medium">{player.nickname}</span>
-              {player.hasBingo ? <span title="Bingo">🏆</span> : null}
+              {player.hasBingo ? (
+                <span title="Bingo" aria-label="has bingo">
+                  🏆
+                </span>
+              ) : null}
+              {!player.hasBingo && player.isOneAway ? (
+                <span title="One square away" aria-label="one square away">
+                  🔥
+                </span>
+              ) : null}
             </span>
             <span className="tabular-nums">{player.score}</span>
           </li>

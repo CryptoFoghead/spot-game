@@ -19,6 +19,7 @@ export type RoomSnapshot = {
     role: string;
     score: number;
     hasBingo: boolean;
+    isOneAway: boolean;
   } | null;
   players: Array<{
     id: string;
@@ -27,6 +28,7 @@ export type RoomSnapshot = {
     score: number;
     markedCount: number;
     hasBingo: boolean;
+    isOneAway: boolean;
   }>;
   card: Array<{
     id: string;
