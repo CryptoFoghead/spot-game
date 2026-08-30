@@ -33,6 +33,7 @@ which server is answering before trusting a port.
 | `docs/GAP_LIST.md` | Everything not yet built (G-nn, prioritised) |
 | `docs/BUG_LIST.md` | Defects with root causes (B-nn) |
 | `docs/RELEASE_AUDIT.md` | MVP requirements marked PASS/PARTIAL |
+| `docs/FUNDRAISER_LEGAL.md` | Where paid-entry fundraisers become gambling. Read before any money-for-prizes feature |
 
 ## Non-obvious rules
 
@@ -48,4 +49,10 @@ which server is answering before trusting a port.
   calls abort each other under real latency (B-07).
 - **Secrets never reach the client.** `scripts/scan-secrets.js` enforces this;
   run it after touching env handling.
+- **Never build paid entry for a game with prizes.** Consideration + chance +
+  prize is gambling, and SPOT deals a random card. Do not add entry fees, a
+  per-player or percentage cut, prize pots, or payout handling — and do not
+  describe SPOT as being for raffles, wagers or cash prizes — without reading
+  `docs/FUNDRAISER_LEGAL.md` first and getting the sign-off it names. There are
+  safe fundraiser shapes in there; the tempting one is the unsafe one.
 - Migrations are committed and applied with `npx supabase db push --linked`.
