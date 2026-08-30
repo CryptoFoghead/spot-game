@@ -24,8 +24,30 @@ function readEnv(): Record<string, string> {
 
 const env = readEnv();
 
+/**
+ * `describe.skip` still RUNS the suite body — it only skips the tests inside.
+ * Every integration file builds its clients there, so without this the files
+ * threw "supabaseUrl is required" during collection on any machine with no
+ * `.env.local`, which is exactly what CI is (BUG_LIST B-18).
+ *
+ * A stub that throws on use is better than a placeholder URL: skipped suites
+ * never touch it, and a test accidentally written outside `describeLive` fails
+ * saying why instead of timing out against a hostname that does not exist.
+ */
+function unconfiguredClient(): SupabaseClient {
+  return new Proxy({} as SupabaseClient, {
+    get(_target, property) {
+      throw new Error(
+        `Integration tests need .env.local (tried to use .${String(property)}). ` +
+          "Wrap the suite in describeLive so it skips instead."
+      );
+    },
+  });
+}
+
 /** Anonymous client — the same access level a guest player's browser has. */
 export function anonClient(): SupabaseClient {
+  if (!hasLiveEnv) return unconfiguredClient();
   return createClient(
     env.NEXT_PUBLIC_SUPABASE_URL,
     env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
@@ -35,6 +57,7 @@ export function anonClient(): SupabaseClient {
 
 /** Service-role client — test setup/teardown only, never app code. */
 export function adminClient(): SupabaseClient {
+  if (!hasLiveEnv) return unconfiguredClient();
   return createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });

@@ -6,6 +6,7 @@ export type CardSquare = {
   text: string;
   isFree: boolean;
   marked: boolean;
+  markedBy?: string | null;
 };
 
 /**

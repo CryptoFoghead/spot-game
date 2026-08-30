@@ -33,7 +33,7 @@ Everything known to be missing, incomplete, or deferred. This is the running to-
 | G-04 | P0 | Nothing enforced or swept `expires_at` | `sweep_rooms()` marks expired rooms and deletes terminal rooms past 30-day retention. Scheduled hourly in-database via pg_cron; `maintenance_status()` makes the schedule observable. |
 | G-03 | P0 | No error alerting | Sentry wired into the existing reportError seam, errors only (tracing and replay off — they bill separately and the org quota is shared with TourneyMind). Control-flow throws and mobile WebSocket noise filtered. Verified end to end: event accepted into project 4511997018636288. Email alerts on high-priority issues. |
 | G-05 | P0 | AI cost had no ceiling | Global cap of 500 generations/day, enforced independently of per-user limits, with a warning logged when it holds users back. |
-| G-06 | P1 | No CI | GitHub Actions on PRs and `master`: lint, typecheck, unit tests, build, secret scan. Integration tests skip without `.env.local`, so no database secrets are needed in a public repo. |
+| G-06 | P1 | No CI | GitHub Actions on PRs and `master`: lint, typecheck, unit tests, build, secret scan. Integration tests skip without `.env.local`, so no database secrets are needed in a public repo. **Was marked done while red** — it failed every run for weeks (BUG_LIST **B-18**) because nobody read a conclusion. Green as of the `together-mode` PR. |
 | G-07 | P1 | PWA icons were SVG only | PNG 192/512/maskable/apple-touch generated from the SVG by `scripts/generate-icons.js`, wired into the manifest and layout metadata. |
 | G-08 | P1 | Data retention (PRD §57) | Rooms expire and are deleted after 30 days; AI usage after 7. Plus account deletion below. |
 | G-08b | P1 | No "delete my account" | `delete_my_account()` removes the user, profile, games and usage. Rooms they host are deliberately **not** destroyed — `host_user_id` is nulled so a game in progress doesn't vanish under other players. Confirmation is typing DELETE. |
@@ -51,6 +51,8 @@ Everything known to be missing, incomplete, or deferred. This is the running to-
 | G-21 | P3 | Only classic and blackout | Added four corners, double, and points. Implemented in SQL and mirrored in TypeScript, with integration tests proving they agree for every mode. |
 | G-23 | P3 | Points mode scoring | Points mode ranks by square point values; score and marked count now reported separately. |
 | G-25 | P3 | Unused starter assets | Removed. |
+| G-26 | P2 | Nothing for two people at one table | **Co-op mode ("Together").** One shared card for the whole room instead of one each: `player_cards.room_player_id` becomes nullable, a partial unique index keeps it to exactly one shared card per room, and `player_card_squares.marked_by` records who spotted what. Authorisation changes shape — a personal card requires you to *be* the owner, a shared card requires you to be an *active player in the room* — and both halves are tested. The team wins together; each player still scores on what they personally found, so there is a reason to look. |
+| G-27 | P2 | Content assumed a crowd to watch | **Date Night Bingo** and **Coffee Shop Bingo**, 40 squares each, written to prompt conversation rather than just observation ("A table where it is obviously a first date"). These are the two-people-at-a-table case the co-op mode serves. |
 
 ---
 

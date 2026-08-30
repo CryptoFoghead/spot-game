@@ -9,6 +9,7 @@ import { Countdown } from "@/components/room/countdown";
 import { RoomLive } from "@/components/room/room-live";
 import { Badge } from "@/components/ui/badge";
 import { ActivityFeed } from "@/components/game/activity-feed";
+import { assignHues } from "@/lib/crowd";
 import { loadRoomActivity, loadRoomSnapshot } from "@/lib/room";
 
 export const metadata: Metadata = { title: "Play" };
@@ -22,6 +23,17 @@ export default async function PlayRoomPage(
 
   const { room, me, players, card } = snapshot;
   const activity = await loadRoomActivity(code, room.id);
+
+  // Shared cards show who spotted each square, in that player's colour.
+  const hues = assignHues(players.map((p) => p.id));
+  const spotters = room.sharedCard
+    ? Object.fromEntries(
+        players.map((p) => [
+          p.id,
+          { fill: hues.get(p.id)?.fill ?? "", nickname: p.nickname },
+        ])
+      )
+    : undefined;
 
   if (!me) {
     return (
@@ -79,9 +91,18 @@ export default async function PlayRoomPage(
       ) : (
         <div className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm">
           <span>
-            You: <span className="font-bold tabular-nums">{me.score}</span>
+            {room.sharedCard ? "Together: " : "You: "}
+            <span className="font-bold tabular-nums">
+              {room.sharedCard
+                ? card.filter((s) => s.marked && !s.isFree).length
+                : me.score}
+            </span>
           </span>
-          {leader ? (
+          {room.sharedCard ? (
+            <span className="text-muted-foreground">
+              You spotted <span className="font-bold tabular-nums">{me.score}</span>
+            </span>
+          ) : leader ? (
             <span className="text-muted-foreground">
               Leader: {leader.nickname}{" "}
               <span className="font-bold tabular-nums">{leader.score}</span>
@@ -106,6 +127,7 @@ export default async function PlayRoomPage(
         initialSquares={card}
         roomCode={room.code}
         interactive={room.status === "active"}
+        spotters={spotters}
       />
 
       <section>

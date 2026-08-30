@@ -15,10 +15,13 @@ export function PlayBoard({
   initialSquares,
   roomCode,
   interactive,
+  spotters,
 }: {
   initialSquares: CardSquare[];
   roomCode: string;
   interactive: boolean;
+  /** Shared cards only: player id -> { fill, nickname } for attribution. */
+  spotters?: Record<string, { fill: string; nickname: string }>;
 }) {
   const scheduleRefresh = useRoomRefresh();
   const [squares, setSquares] = useState(initialSquares);
@@ -88,6 +91,12 @@ export function PlayBoard({
             interactive={interactive}
             pending={pendingIds.has(square.id)}
             onToggle={onToggle}
+            spotterFill={
+              square.markedBy ? spotters?.[square.markedBy]?.fill : undefined
+            }
+            spotterName={
+              square.markedBy ? spotters?.[square.markedBy]?.nickname : undefined
+            }
           />
         ))}
       </div>
