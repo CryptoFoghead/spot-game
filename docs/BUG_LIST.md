@@ -34,6 +34,8 @@ Defects found in testing, with root cause and how they were verified fixed. **[G
 
 | B-17 | Major | **Every co-op room failed to create.** `create_room` accepted `game_mode = 'coop'` and then the insert itself was rejected. | `rooms_game_mode_check` was written from the PRD's original list of modes. `coop` came later, out of the two-people-at-a-table case, and the constraint was never widened — so validating the mode inside the function was not enough. **The table has the final say.** | The co-op integration tests, on their first run. | Migration `0026` replaces the constraint with the full list, including `endless` as reserved so the next mode does not repeat this. |
 
+| B-18 | Major | **CI had never passed once.** Every push since CI was added failed at Typecheck with `Cannot find name 'PageProps'` across thirteen files. The gap list recorded CI as done. | `PageProps` and `LayoutProps` are **generated** by Next.js into `.next/types`, not declared in the repo. Locally they always existed because a dev server or build had produced them, so `tsc --noEmit` passed. CI checks out clean and typechecks *before* building, so nothing had generated them. The failure was invisible locally by construction. | Noticed while watching the co-op PR's CI run — the first time the run's actual conclusion was read rather than assumed. | `typecheck` is now `next typegen && tsc --noEmit`, so it generates what it needs instead of relying on a leftover build. Verified against a wiped `.next`, which reproduces CI's condition. |
+
 ---
 
 ## Test-side false alarms
