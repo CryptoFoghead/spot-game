@@ -6,13 +6,15 @@ import { deleteAccount, type SafetyFormState } from "@/app/actions/safety";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { withNetworkGuard } from "@/lib/forms";
 
 const initialState: SafetyFormState = {};
 
+const guardedDeleteAccount = withNetworkGuard(deleteAccount, "Couldn't reach the server. Check your connection and try again.");
+
 export function DeleteAccount() {
   const [armed, setArmed] = useState(false);
-  const [state, formAction, pending] = useActionState(
-    deleteAccount,
+  const [state, formAction, pending] = useActionState(guardedDeleteAccount,
     initialState
   );
 

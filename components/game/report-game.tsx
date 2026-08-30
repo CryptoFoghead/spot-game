@@ -8,6 +8,7 @@ import { NativeSelect } from "@/components/creator/native-select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { withNetworkGuard } from "@/lib/forms";
 
 const REASONS = [
   { value: "harassment", label: "Harassment" },
@@ -21,10 +22,12 @@ const REASONS = [
 
 const initialState: SafetyFormState = {};
 
+const guardedReportGame = withNetworkGuard(reportGame, "Couldn't reach the server. Check your connection and try again.");
+
 /** Report control on a public game (PRD §55). */
 export function ReportGame({ gameId }: { gameId: string }) {
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState(reportGame, initialState);
+  const [state, formAction, pending] = useActionState(guardedReportGame, initialState);
 
   if (state.done) {
     return (

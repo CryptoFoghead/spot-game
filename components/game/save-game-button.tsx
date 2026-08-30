@@ -5,8 +5,11 @@ import { useActionState } from "react";
 
 import { toggleSave, type CommunityState } from "@/app/actions/community";
 import { Button } from "@/components/ui/button";
+import { withNetworkGuard } from "@/lib/forms";
 
 const initialState: CommunityState = {};
+
+const guardedToggleSave = withNetworkGuard(toggleSave, "Couldn't reach the server. Check your connection and try again.");
 
 export function SaveGameButton({
   gameId,
@@ -15,7 +18,7 @@ export function SaveGameButton({
   gameId: string;
   initiallySaved: boolean;
 }) {
-  const [state, formAction, pending] = useActionState(toggleSave, initialState);
+  const [state, formAction, pending] = useActionState(guardedToggleSave, initialState);
   const saved = state.saved ?? initiallySaved;
 
   return (

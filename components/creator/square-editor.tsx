@@ -11,7 +11,13 @@ import {
 import { NativeSelect } from "@/components/creator/native-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { withNetworkGuard } from "@/lib/forms";
 import { DIFFICULTIES } from "@/lib/validation/game";
+
+const OFFLINE = "Couldn't reach the server. Check your connection and try again.";
+const guardedUpdate = withNetworkGuard(updateSquare, OFFLINE);
+const guardedDelete = withNetworkGuard(deleteSquare, OFFLINE);
+const guardedAdd = withNetworkGuard(addSquare, OFFLINE);
 
 export type SquareItem = {
   id: string;
@@ -41,9 +47,9 @@ function DifficultySelect({
 }
 
 function SquareRow({ gameId, square }: { gameId: string; square: SquareItem }) {
-  const [saveState, saveAction, saving] = useActionState(updateSquare, initialState);
+  const [saveState, saveAction, saving] = useActionState(guardedUpdate, initialState);
   const [deleteState, deleteAction, deleting] = useActionState(
-    deleteSquare,
+    guardedDelete,
     initialState
   );
 
@@ -88,7 +94,7 @@ function SquareRow({ gameId, square }: { gameId: string; square: SquareItem }) {
 }
 
 function AddSquareForm({ gameId }: { gameId: string }) {
-  const [state, formAction, pending] = useActionState(addSquare, initialState);
+  const [state, formAction, pending] = useActionState(guardedAdd, initialState);
 
   return (
     <form action={formAction} className="flex flex-wrap items-center gap-2">

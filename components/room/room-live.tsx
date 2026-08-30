@@ -64,7 +64,23 @@ export function RoomLive({
         }
       });
 
+    // A phone that spent the main course in a pocket is the normal case, not
+    // the edge case. The socket dies while backgrounded and does not always
+    // report it, so the indicator can still say "live" over a board that
+    // stopped updating ten minutes ago. Coming back to the tab, or getting the
+    // network back, therefore forces a resync from the database — which is the
+    // authority anyway, so an extra refetch costs nothing and the scheduler
+    // debounces bursts.
+    function resync() {
+      if (document.visibilityState === "visible") scheduleRefresh();
+    }
+
+    document.addEventListener("visibilitychange", resync);
+    window.addEventListener("online", resync);
+
     return () => {
+      document.removeEventListener("visibilitychange", resync);
+      window.removeEventListener("online", resync);
       supabase.removeChannel(channel);
     };
   }, [roomId, playerId, nickname, role, scheduleRefresh]);

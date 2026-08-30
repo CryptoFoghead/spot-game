@@ -6,11 +6,14 @@ import { sendMagicLink, type AuthFormState } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { withNetworkGuard } from "@/lib/forms";
 
 const initialState: AuthFormState = {};
 
+const guardedSendMagicLink = withNetworkGuard(sendMagicLink, "Couldn't reach the server. Check your connection and try again.");
+
 export function LoginForm() {
-  const [state, formAction, pending] = useActionState(sendMagicLink, initialState);
+  const [state, formAction, pending] = useActionState(guardedSendMagicLink, initialState);
 
   if (state.sent) {
     return (
