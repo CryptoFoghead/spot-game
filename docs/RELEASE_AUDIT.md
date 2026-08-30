@@ -22,7 +22,7 @@ The one thing still outstanding is PRD §74: two real people, two real phones, s
 | # | Requirement | Status | Evidence |
 |---|---|---|---|
 | 1 | Open site | **PASS** | 200 on `/`, `/explore`, `/games/[slug]` in production today |
-| 2 | Choose an existing Game | **PASS** | 13 starter games, 40 squares each, browsable and filterable |
+| 2 | Choose an existing Game | **PASS** | 17 starter games, 40 squares each, browsable and filterable |
 | 3 | Start a Room (no account) | **PASS** | E2E: anonymous visitor starts a room and lands on the host screen |
 | 4 | Invite another person | **PASS** | QR code + copy link + Web Share, join URL works |
 | 5 | Second person joins without registration | **PASS** | E2E: players join with a nickname only, on desktop and on two mobile contexts |
@@ -55,7 +55,7 @@ The one thing still outstanding is PRD §74: two real people, two real phones, s
 
 | Requirement | Status | Notes |
 |---|---|---|
-| Built-in starter Games | **PASS** | 13 games × 40 squares seeded and live, covering restaurants, cafés, gigs, family gatherings and theme parks as well as the original travel and event set |
+| Built-in starter Games | **PASS** | 17 games × 40 squares seeded and live. Beyond the original travel and event set: restaurants, cafés, gigs, family gatherings, theme parks, aircraft cabins, meetings, graduations and hotel breakfasts |
 | User-created Games | **PASS** | My Games with Created/Drafts/Saved tabs |
 | View Game | **PASS** | `/games/[slug]` with SEO metadata and per-game OG image |
 | Start Room | **PASS** | From the game detail page |
