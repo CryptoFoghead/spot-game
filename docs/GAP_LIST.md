@@ -60,4 +60,5 @@ Everything known to be missing, incomplete, or deferred. This is the running to-
 - **Supabase free tier pauses after 7 days of inactivity.** The app will look broken until you restore it from the dashboard. If SPOT gets real usage, this is the first thing to upgrade.
 - **Room codes are 4 digits and unique only among reachable rooms.** Fine now. PRD §20 says migrate to 6-character alphanumeric when volume grows.
 - **The E2E suite is a localhost gate.** Running it against the deployment is flaky for harness reasons (BUG_LIST B-10a). Verify production deliberately instead.
+- **Sentry per-key rate limits need a Business plan** ($80/mo), so volume is bounded in our own code instead: 20 events per browser session and 30 per minute per server instance, on top of filtering control-flow throws and mobile network noise. See `lib/sentry-budget.ts`.
 - **Enabling integration tests in CI** would mean putting Supabase credentials in a public repo's secrets. Deliberately not done: the unit suite runs in CI, the integration suite runs locally against the real project.

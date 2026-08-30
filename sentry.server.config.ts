@@ -1,5 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 
+import { withinSentryBudget } from "@/lib/sentry-budget";
+
 /**
  * Server-side Sentry.
  *
@@ -20,6 +22,9 @@ Sentry.init({
   tracesSampleRate: 0,
   // Errors only: no performance data, no profiling.
   sendDefaultPii: false,
+
+  // Bounded so a hot loop cannot drain a quota shared with another project.
+  beforeSend: (event) => (withinSentryBudget() ? event : null),
 
   ignoreErrors: [
     // Next's redirect() and notFound() throw by design; they are control

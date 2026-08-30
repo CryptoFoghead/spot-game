@@ -36,6 +36,32 @@ Sentry.init({
     if (value.includes("WebSocket") || value.includes("_next/hmr")) {
       return null;
     }
-    return event;
+    return withinBudget() ? event : null;
   },
 });
+
+/**
+ * Client-side event budget.
+ *
+ * Sentry's per-key rate limits are a Business-plan feature, and this
+ * organisation's quota is shared with another project — so a runaway error
+ * loop here (a render loop, a retry storm) could drain the pool and blind us
+ * on the other app. This caps what any single page session can send.
+ *
+ * The cap is generous enough that ordinary bugs report normally; it only bites
+ * when something is looping, which is exactly the case worth stopping.
+ */
+const MAX_EVENTS_PER_SESSION = 20;
+let sent = 0;
+
+function withinBudget(): boolean {
+  sent += 1;
+  if (sent === MAX_EVENTS_PER_SESSION) {
+    // Leave a breadcrumb in the last accepted event's console context so the
+    // truncation is visible rather than silent.
+    console.warn(
+      `[sentry] event budget reached (${MAX_EVENTS_PER_SESSION}); further errors this session are not reported`
+    );
+  }
+  return sent <= MAX_EVENTS_PER_SESSION;
+}

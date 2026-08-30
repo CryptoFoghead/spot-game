@@ -1,5 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 
+import { withinSentryBudget } from "@/lib/sentry-budget";
+
 /** Edge runtime (the proxy/middleware). Same errors-only posture. */
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
@@ -8,5 +10,8 @@ Sentry.init({
   release: process.env.VERCEL_GIT_COMMIT_SHA,
   tracesSampleRate: 0,
   sendDefaultPii: false,
+  // Bounded so a hot loop cannot drain a quota shared with another project.
+  beforeSend: (event) => (withinSentryBudget() ? event : null),
+
   ignoreErrors: ["NEXT_REDIRECT", "NEXT_NOT_FOUND"],
 });
