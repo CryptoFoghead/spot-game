@@ -5,7 +5,7 @@
 
 Nothing is marked PASS unless it was observed working. Requirements verified only by reading code are marked PARTIAL and say so.
 
-**How this pass was done.** Every automated gate and security probe below was **re-run today** against the live project — lint, typecheck, 226 unit and integration tests, 14 E2E, 7 accessibility, production build, the secret scan and the RLS probe — and production was confirmed to be serving the audited commit. Rows describing the **creator flow** (creating a game, editing squares, live AI suggestion) carry forward browser observations made on 2026-08-29 and were **not** re-observed today; they are marked ‡ so nobody mistakes carried-forward evidence for fresh evidence.
+**How this pass was done.** Every automated gate and security probe below was **re-run today** against the live project — lint, typecheck, 235 unit and integration tests, 14 E2E, 7 accessibility, production build, the secret scan and the RLS probe — and production was confirmed to be serving the audited commit. Rows describing the **creator flow** (creating a game, editing squares, live AI suggestion) carry forward browser observations made on 2026-08-29 and were **not** re-observed today; they are marked ‡ so nobody mistakes carried-forward evidence for fresh evidence.
 
 ## Verdict
 
@@ -130,7 +130,7 @@ All run today at commit `9e0fb2e`.
 |---|---|
 | `npm run lint` | clean |
 | `npm run typecheck` | clean |
-| `npm run test` | **227 passing** (unit + live integration) |
+| `npm run test` | **235 passing** (unit + live integration) |
 | `npm run e2e` | **14 passing**, including the §73 mandatory scenario and 4 two-phone tests |
 | accessibility (axe) | 7 passing |
 | `npm run build` | clean |
