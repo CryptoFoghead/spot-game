@@ -97,12 +97,21 @@ export async function createSignedInUser(
   userId: string;
   email: string;
 }> {
+  // Stagger the opening burst so parallel suites do not all sign in at once.
+  if (attempt === 1) await sleep(Math.random() * 800);
+
   try {
     return await signIn();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (attempt < 4 && RATE_LIMITED.test(message)) {
-      await sleep(attempt * 2500);
+      // Jittered so colliding workers separate, but bounded: a suite may sign
+      // in twice in one beforeAll, and both chains share the hook budget.
+      // Worst case here is ~18s per user; raising attempts to 6 with wider
+      // jitter blew past 40s and turned a clear rate-limit error into an
+      // opaque hook timeout.
+      const base = attempt * 2000;
+      await sleep(base + Math.random() * base * 0.5);
       return createSignedInUser(attempt + 1);
     }
     throw error;

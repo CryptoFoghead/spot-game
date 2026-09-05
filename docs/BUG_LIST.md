@@ -54,7 +54,29 @@ Not product bugs — mistakes in the tests or probes themselves. Recorded becaus
 | B-08 | A unit test asserting "24 of 25 marked squares is not a bingo" failed. | **The test premise was impossible.** Removing a single square cannot break all 12 winning lines. The meaningful near-miss is 20 of 25 with the anti-diagonal left empty, which breaks every line. Test rewritten. |
 | B-09 | The RLS probe reported that anonymous users could DELETE from all nine tables (HTTP 204). | **Nothing was deleted.** PostgREST returns 204 for a DELETE that matched *zero* rows, and RLS filters rows silently — so "blocked" and "deleted everything" look identical from the status code. Seed counts were unchanged (28/8/320). The probe now compares row counts before and after. |
 | B-15 | Every call to create_room started failing with "Could not choose the best candidate function", breaking the whole app at once. | **Adding a defaulted parameter to a Postgres function creates an overload, it does not replace the function.** The database held both the five- and six-argument `create_room`, and every existing caller passing five named arguments matched both. Dropping the superseded signature fixed it. Caught immediately by the game-mode tests. |
-| B-16 | Several integration suites failed together with null data and "Cannot read properties of null", looking like broken RPCs. | **Supabase auth rate limiting.** Vitest runs files in parallel, so several sign-ins fire at once; the throttled ones left the client anonymous, and RPCs granted to `authenticated` returned null. Each file passed alone. Fixed by verifying the session established (so it fails with the real reason), reusing users per file, and backing off on the throttle. |
+| B-16 | Several integration suites failed together with null data and "Cannot read properties of null", looking like broken RPCs. | **Supabase auth rate limiting.** Vitest runs files in parallel, so several sign-ins fire at once; the throttled ones left the client anonymous, and RPCs granted to `authenticated` returned null. Each file passed alone. Fixed by verifying the session established (so it fails with the real reason), reusing users per file, and backing off on the throttle. **Revisited 2026-08-30** — see the note below. |
+
+### B-16, revisited (2026-08-30)
+
+Adding a fifth auth-using suite brought this back: seven users are now created
+across four files on a full run. Two things learned the hard way while chasing
+it, both worth more than the fix itself.
+
+**The retry chain has to fit inside the hook budget.** Raising the attempt
+ceiling from 4 to 6 with wider jitter pushed the worst case to roughly 70
+seconds against a 40-second `hookTimeout` — and a suite may sign in twice in
+one `beforeAll`, so both chains share that budget. The symptom changed from a
+clear `Request rate limit reached` into an opaque `Hook timed out`, which is
+strictly worse: it hides the real cause. Backoff is now bounded to about 18
+seconds per user and the budget raised to 60.
+
+**Running the full suite repeatedly exhausts the quota.** Roughly fifteen
+consecutive runs, seven users each, and the auth limit is gone for a while —
+at which point every auth-dependent suite fails and the codebase looks broken
+when nothing is wrong. Verify a change against the specific suites it touches,
+not by re-running everything on a loop. The auth-free suites (145 tests) stay
+green throughout and are the honest signal while the quota is spent.
+
 | B-12 | Every E2E test failed at once, including the simplest one, right after a set of unrelated changes. | **Another session's dev server was occupying port 3000**, running older code — it 404'd on the AI route entirely. Playwright's `reuseExistingServer` happily reused it, so the suite was testing a different build. The config now defaults to port **3100** and starts its own server, so it cannot silently reuse someone else's. |
 | B-10a | Playwright against the deployment failed at a different step every run — sometimes the first navigation, sometimes a board assertion. | Two harness problems, not app defects: `waitForLoadState("networkidle")` **never settles** on pages holding a Supabase realtime WebSocket, and repeated three-context runs against a live deployment contend for local browser resources. Production responds in under a second and was verified deliberately with two real clients. The suite is a localhost gate. |
 | B-11a | A database check right after a production mark showed the score still 0, suggesting the write had failed. | **The check raced the write.** A moment later the value was correct. The real defect nearby was B-07 (the UI not refreshing), which this nearly masked. |
