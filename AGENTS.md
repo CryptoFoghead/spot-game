@@ -34,6 +34,7 @@ which server is answering before trusting a port.
 | `docs/BUG_LIST.md` | Defects with root causes (B-nn) |
 | `docs/RELEASE_AUDIT.md` | MVP requirements marked PASS/PARTIAL |
 | `docs/FUNDRAISER_LEGAL.md` | Where paid-entry fundraisers become gambling. Read before any money-for-prizes feature |
+| `docs/PRICING.md` | Room-size pricing: free for a table, paid for an event. Charge at room creation, never at join |
 
 ## Non-obvious rules
 

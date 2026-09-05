@@ -160,3 +160,19 @@ available now and needs nobody's permission.
 Related: [GAP_LIST.md](GAP_LIST.md) G-22 (monetization), and the entitlement
 seam in [ENDLESS_MODE.md](ENDLESS_MODE.md)'s sibling migration 0027 — the tier
 plumbing already exists and is agnostic about how anyone pays.
+
+---
+
+## Addendum, 2026-08-30 — room-size pricing
+
+A better model surfaced after this was written: charge the **host** for room
+capacity, not the players for entry. See [PRICING.md](PRICING.md).
+
+It removes the hard problem. There is no consideration flowing toward a prize,
+so the three-element test is not met at all — this is a software fee, which is
+structure **B** above arrived at from a different direction.
+
+One question it adds to the list for the attorney: a fee **banded by headcount**
+is close to the "compensation per player" language some state vendor rules use.
+For a host running a licensed charitable-gaming event, prefer a **flat
+per-event or per-season** price even if ordinary consumer pricing stays banded.
