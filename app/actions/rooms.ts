@@ -27,6 +27,8 @@ function friendly(message: string | undefined): string {
   if (message.includes("not the host"))
     return "Only the host can do that.";
   if (message.includes("nickname required")) return "Enter a nickname.";
+  if (message.includes("room is full"))
+    return "This game is full. Ask the host to start another one.";
   if (message.includes("squares to start"))
     return "This game doesn't have enough squares to start yet.";
   // Unmapped failures still reach the user as a generic message, but the
