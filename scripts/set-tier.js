@@ -6,9 +6,14 @@
  *   node scripts/set-tier.js someone@example.com free
  *
  * There is no checkout yet (G-22), so this is how a supporter is made today —
- * comping a friend, thanking a play-tester. It writes with the service role
- * because granting a tier is deliberately not something the API can do: there
- * are no write policies on user_entitlements at all.
+ * comping a friend, thanking a play-tester. It calls admin_grant_tier /
+ * admin_expire_tier (both service-role-only RPCs) rather than writing to a
+ * table directly: entitlements now live in the shared platform schema
+ * (platform.entitlements, since 20260908000001_platform_schema.sql), which
+ * is deliberately never exposed to PostgREST at all — not even the service
+ * role can reach it with a .from() call. admin_grant_tier/admin_expire_tier
+ * are SECURITY DEFINER wrappers in public, the same shape every other
+ * platform-reaching function in this project uses.
  */
 require("dotenv").config({ path: ".env.local" });
 
@@ -65,13 +70,11 @@ async function main() {
     process.exit(1);
   }
 
-  // 'free' is the absence of an entitlement, not a row saying free — that way
-  // there is one representation of the default rather than two.
+  // 'free' is the absence of an active tier entitlement, not a row saying
+  // free — entitlements are append-only now, so "clearing" a tier means
+  // expiring whatever's currently active, not deleting a row.
   if (tier === "free") {
-    const { error } = await admin
-      .from("user_entitlements")
-      .delete()
-      .eq("user_id", user.id);
+    const { error } = await admin.rpc("admin_expire_tier", { p_user_id: user.id });
     if (error) {
       console.error(`could not clear tier: ${error.message}`);
       process.exit(1);
@@ -80,12 +83,10 @@ async function main() {
     return;
   }
 
-  const { error } = await admin.from("user_entitlements").upsert({
-    user_id: user.id,
-    tier,
-    source: "manual",
-    granted_at: new Date().toISOString(),
-    expires_at: days
+  const { error } = await admin.rpc("admin_grant_tier", {
+    p_user_id: user.id,
+    p_tier: tier,
+    p_expires_at: days
       ? new Date(Date.now() + days * 86_400_000).toISOString()
       : null,
   });
