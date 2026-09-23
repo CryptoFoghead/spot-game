@@ -30,7 +30,14 @@ const TABLES = [
   "player_cards",
   "player_card_squares",
   "room_events",
+  // Superseded by platform.entitlements (20260908000002) but still present and
+  // still writable, so it stays probed until it is actually dropped.
   "user_entitlements",
+  // The live entitlement surface. These live in the platform schema, which is
+  // not exposed to PostgREST at all — the probe should find no table here.
+  "entitlements",
+  "purchases",
+  "guest_profiles",
   "ai_usage",
 ];
 

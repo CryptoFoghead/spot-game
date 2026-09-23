@@ -23,15 +23,38 @@ describeLive("entitlements", () => {
 
   afterAll(async () => {
     for (const id of [alice?.userId, bob?.userId].filter(Boolean)) {
-      await admin.from("user_entitlements").delete().eq("user_id", id!);
+      await admin.rpc("admin_expire_tier", { p_user_id: id! });
       await admin.from("ai_usage").delete().eq("user_id", id!);
     }
   });
 
-  async function setTier(userId: string, tier: string) {
-    const { error } = await admin
-      .from("user_entitlements")
-      .upsert({ user_id: userId, tier, source: "manual" });
+  /**
+   * Entitlements moved to the shared platform schema (20260908000001), which
+   * is deliberately never exposed to PostgREST — not even the service role can
+   * reach it with .from(). Everything goes through the SECURITY DEFINER
+   * wrappers in public.
+   *
+   * These tests used to write to the old public table directly. It still
+   * exists and still accepts writes, but nothing reads it any more, so the
+   * writes silently did nothing and this suite went red.
+   */
+  async function setTier(
+    userId: string,
+    tier: string,
+    expiresAt: string | null = null
+  ) {
+    const { error } = await admin.rpc("admin_grant_tier", {
+      p_user_id: userId,
+      p_tier: tier,
+      p_expires_at: expiresAt,
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  async function clearTier(userId: string) {
+    const { error } = await admin.rpc("admin_expire_tier", {
+      p_user_id: userId,
+    });
     if (error) throw new Error(error.message);
   }
 
@@ -70,21 +93,20 @@ describeLive("entitlements", () => {
     );
     expect(data.adFree).toBe(true);
 
-    await setTier(alice.userId, "free");
+    await clearTier(alice.userId);
   });
 
   it("ignores an entitlement that has expired", async () => {
-    await admin.from("user_entitlements").upsert({
-      user_id: alice.userId,
-      tier: "supporter",
-      source: "manual",
-      expires_at: new Date(Date.now() - 60_000).toISOString(),
-    });
+    await setTier(
+      alice.userId,
+      "supporter",
+      new Date(Date.now() - 60_000).toISOString()
+    );
 
     const { data } = await alice.client.rpc("entitlements_for_me");
     expect(data.tier).toBe("free");
 
-    await admin.from("user_entitlements").delete().eq("user_id", alice.userId);
+    await clearTier(alice.userId);
   });
 
   it("refuses to tell an anonymous caller anything", async () => {
@@ -161,33 +183,38 @@ describeLive("entitlements", () => {
       expect(data.allowed).toBe(true);
     }
 
-    await setTier(bob.userId, "free");
+    await clearTier(bob.userId);
     await admin.from("ai_usage").delete().eq("user_id", bob.userId);
   });
 
   it("keeps one account's tier private from another", async () => {
     await setTier(alice.userId, "supporter");
 
-    const { data } = await bob.client
-      .from("user_entitlements")
-      .select("*")
-      .eq("user_id", alice.userId);
-    expect(data).toEqual([]);
+    const mine = await alice.client.rpc("entitlements_for_me");
+    expect(mine.data.tier).toBe("supporter");
 
-    // And you can read your own.
-    const mine = await alice.client
-      .from("user_entitlements")
-      .select("tier")
-      .eq("user_id", alice.userId);
-    expect(mine.data).toEqual([{ tier: "supporter" }]);
+    const theirs = await bob.client.rpc("entitlements_for_me");
+    expect(theirs.data.tier).toBe("free");
 
-    await admin.from("user_entitlements").delete().eq("user_id", alice.userId);
+    await clearTier(alice.userId);
+  });
+
+  it("does not expose the entitlement store through the API at all", async () => {
+    // The platform schema is not in the exposed schemas, so there is no table
+    // for a client to read, guess a filter against, or write to. That is
+    // stronger than an RLS policy: the surface does not exist.
+    const reader = await bob.client.from("entitlements").select("*").limit(1);
+    expect(reader.error).not.toBeNull();
   });
 
   it("refuses to let anyone grant themselves a tier", async () => {
-    const { error } = await bob.client
-      .from("user_entitlements")
-      .insert({ user_id: bob.userId, tier: "supporter" });
+    // admin_grant_tier is service-role only; an authenticated caller has no
+    // execute grant on it.
+    const { error } = await bob.client.rpc("admin_grant_tier", {
+      p_user_id: bob.userId,
+      p_tier: "supporter",
+      p_expires_at: null,
+    });
     expect(error).not.toBeNull();
 
     const { data } = await bob.client.rpc("entitlements_for_me");

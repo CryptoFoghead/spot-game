@@ -45,6 +45,8 @@ Defects found in testing, with root cause and how they were verified fixed. **[G
 
 ---
 
+| B-23 | Major | **The entitlements suite had been red since the platform migration, and `public.user_entitlements` is now a trap.** Granting a tier through it appears to work and does nothing. | Migrations `20260908000001/2` moved entitlements into the shared `platform` schema and repointed `entitlements_for_me()` at it. The old `public.user_entitlements` table was left in place — **still present, still accepting writes, and read by nothing**. The tests wrote to it and then asked the wrapper for the result, so the tier came back `free`. | Running the suite on 2026-09-23 while adding a content pack. Three weeks after the migration landed. | Tests repointed at `admin_grant_tier` / `admin_expire_tier`, the service-role wrappers that are now the only way in. Privacy is asserted through the wrapper rather than by reading a table, and a new test proves the platform schema is not exposed to PostgREST at all. `scripts/verify-rls.js` now probes `entitlements`, `purchases` and `guest_profiles` as well, so the live surface is covered rather than only the dead one. **The dead table itself is still there** — dropping it is a separate, destructive decision. |
+
 ## Test-side false alarms
 
 Not product bugs — mistakes in the tests or probes themselves. Recorded because each one could easily be believed.
