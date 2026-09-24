@@ -103,6 +103,7 @@ expired rooms are marked and deleted past 30-day retention. Check it with
 | [docs/GAP_LIST.md](docs/GAP_LIST.md) | Everything not yet built, prioritised |
 | [docs/BUG_LIST.md](docs/BUG_LIST.md) | Defects, root causes, and fixes |
 | `node scripts/metrics.js` | Product metrics, moderation queue and housekeeping status |
+| `node scripts/apply-seed.js <seed.sql> <game_id>` | Force one seed file's squares into the database. Needed because `db push --include-seed` can record a changed seed's hash without re-running it |
 | `node scripts/set-tier.js <email> <free\|supporter> [--days N]` | Grant or clear an account's tier. There is no checkout yet, so this is how a supporter is made — and it needs the service role, because nothing can grant a tier through the API |
 | [docs/RELEASE_AUDIT.md](docs/RELEASE_AUDIT.md) | MVP requirements marked PASS/PARTIAL |
 | [docs/PHONE_TEST.md](docs/PHONE_TEST.md) | Two-device test checklist — the last MVP acceptance step |

@@ -57,3 +57,9 @@ which server is answering before trusting a port.
   `docs/FUNDRAISER_LEGAL.md` first and getting the sign-off it names. There are
   safe fundraiser shapes in there; the tempting one is the unsafe one.
 - Migrations are committed and applied with `npx supabase db push --linked`.
+- **Editing an already-applied seed file can silently do nothing.**
+  `db push --include-seed` tracks seeds by hash. When a file it has already
+  seen changes, it may print `Updating seed hash to …` and record the new hash
+  *without re-running the file* — so the old rows stay and the change looks
+  applied. Always read back the data after editing a seed. `Seeding data
+  from …` means it ran; `Updating seed hash to …` on its own means it did not.
