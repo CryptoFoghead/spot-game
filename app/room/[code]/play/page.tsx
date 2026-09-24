@@ -7,9 +7,11 @@ import { PlayBoard } from "@/components/game/play-board";
 import { WinnerOverlay } from "@/components/game/winner-overlay";
 import { Countdown } from "@/components/room/countdown";
 import { RoomLive } from "@/components/room/room-live";
+import { ShareButton } from "@/components/room/share-button";
 import { Badge } from "@/components/ui/badge";
 import { ActivityFeed } from "@/components/game/activity-feed";
 import { assignHues } from "@/lib/crowd";
+import { clientEnv } from "@/lib/env";
 import { loadRoomActivity, loadRoomSnapshot } from "@/lib/room";
 
 export const metadata: Metadata = { title: "Play" };
@@ -22,6 +24,9 @@ export default async function PlayRoomPage(
   if (!snapshot) notFound();
 
   const { room, me, players, card } = snapshot;
+  // Inviting was host-only, so a player whose friend turned up had to ask the
+  // host for the code. Late joins already work, so any player can do this.
+  const joinUrl = `${clientEnv().NEXT_PUBLIC_SITE_URL}/join/${room.code}`;
   const activity = await loadRoomActivity(code, room.id);
 
   // Shared cards show who spotted each square, in that player's colour.
@@ -62,6 +67,14 @@ export default async function PlayRoomPage(
           <p className="text-xs text-muted-foreground">
             Room {room.code} · {me.nickname}
           </p>
+          <div className="mt-1.5">
+            <ShareButton
+              gameTitle={snapshot.gameTitle}
+              joinUrl={joinUrl}
+              size="sm"
+              label="Invite"
+            />
+          </div>
         </div>
         <div className="flex flex-col items-end gap-1">
           <Badge variant={room.status === "active" ? "default" : "secondary"}>

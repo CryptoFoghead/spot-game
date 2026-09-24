@@ -11,9 +11,14 @@ import { Button } from "@/components/ui/button";
 export function ShareButton({
   gameTitle,
   joinUrl,
+  size,
+  label = "Share",
 }: {
   gameTitle: string;
   joinUrl: string;
+  /** Compact form for the play header, where the board is the point. */
+  size?: "sm" | "default";
+  label?: string;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -37,13 +42,13 @@ export function ShareButton({
   }
 
   return (
-    <Button type="button" onClick={share} variant="secondary">
+    <Button type="button" onClick={share} variant="secondary" size={size}>
       {copied ? (
         <Check data-icon="inline-start" aria-hidden />
       ) : (
         <Share2 data-icon="inline-start" aria-hidden />
       )}
-      {copied ? "Copied" : "Share"}
+      {copied ? "Copied" : label}
     </Button>
   );
 }
