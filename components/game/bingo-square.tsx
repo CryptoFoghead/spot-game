@@ -51,11 +51,66 @@ function Stamp() {
  * read comfortably at arm's length and gives "Someone eating a full meal at
  * the gate" the room it needs.
  */
+/**
+ * Puts a soft hyphen inside words too long for a tile.
+ *
+ * `hyphens: auto` is set and `lang` is "en", but Chrome did not hyphenate —
+ * it broke "bachelorette" as "bachelorett/e", because `overflow-wrap` will
+ * split anywhere and the hyphenation dictionary is not guaranteed to be
+ * loaded. A soft hyphen is deterministic: the browser breaks THERE and draws
+ * a hyphen, or does not break at all.
+ *
+ * Only long words are touched, and only the rendered text — `aria-label` keeps
+ * the clean string, so a screen reader never hears the break.
+ */
+/** U+00AD. Named because a literal soft hyphen is invisible in source. */
+const SOFT_HYPHEN = String.fromCharCode(0xad);
+
+function softenLongWords(text: string): string {
+  return text
+    .split(/(\s+)/)
+    .map((word) => {
+      if (word.length <= 10) return word;
+      // Break after a vowel near the middle, which reads better than a blind
+      // midpoint split: "bachelo-rette" rather than "bachel-orette".
+      const mid = Math.floor(word.length / 2);
+      for (let offset = 0; offset <= 2; offset++) {
+        for (const at of [mid + offset, mid - offset]) {
+          if (at > 1 && at < word.length - 2 && /[aeiou]/i.test(word[at - 1])) {
+            return word.slice(0, at) + SOFT_HYPHEN + word.slice(at);
+          }
+        }
+      }
+      return word.slice(0, mid) + SOFT_HYPHEN + word.slice(mid);
+    })
+    .join("");
+}
+
 function textSize(text: string): string {
-  if (text.length <= 16) return "text-[13px] leading-[1.1] sm:text-sm";
-  if (text.length <= 28) return "text-[11.5px] leading-[1.12] sm:text-[13px]";
-  if (text.length <= 44) return "text-[10px] leading-[1.14] sm:text-xs";
-  return "text-[9px] leading-[1.12] sm:text-[11px]";
+  // Two things decide the size, and only one of them is obvious.
+  //
+  // Total length sets how many lines are needed. But a single long WORD sets a
+  // hard floor: a tile is about 61px wide on a phone, so "Rhinestones" at 12px
+  // simply does not fit, and `overflow-wrap` shatters it mid-word —
+  // "Rhineston/es", "piggybac/k". That reads far worse than small text, which
+  // is what the first pass at this produced.
+  const longestWord = text
+    .split(/s+/)
+    .reduce((n, w) => Math.max(n, w.length), 0);
+
+  // ~0.6em per character at this weight, inside ~61px of usable width.
+  const wordCap = Math.floor(104 / Math.max(longestWord, 1));
+
+  const byLength =
+    text.length <= 16 ? 15 : text.length <= 28 ? 13 : text.length <= 44 ? 12 : 11;
+
+  const size = Math.max(9, Math.min(byLength, wordCap));
+
+  if (size >= 15) return "text-[15px] leading-[1.1] sm:text-sm";
+  if (size >= 13) return "text-[13px] leading-[1.12] sm:text-[13px]";
+  if (size >= 12) return "text-[12px] leading-[1.14] sm:text-xs";
+  if (size >= 11) return "text-[11px] leading-[1.15] sm:text-[11px]";
+  return "text-[10px] leading-[1.15] sm:text-[11px]";
 }
 
 /**
@@ -89,7 +144,11 @@ export function BingoSquare({
       disabled={disabled}
       onClick={onToggle ? () => onToggle(square) : undefined}
       className={cn(
-        "relative flex aspect-square items-center justify-center overflow-hidden rounded-xl border-2 p-1 text-center font-medium break-words transition-[background-color,border-color,transform] duration-150 sm:p-1.5",
+        // Taller than wide on a phone. The board is width-constrained and has
+        // vertical room to spare — square tiles left the longest squares at 9px
+        // and clipped two of them outright. Square again from sm up, where
+        // width is no longer the binding constraint.
+        "relative flex aspect-[4/5] items-center justify-center overflow-hidden rounded-xl border-2 p-0.5 text-center font-medium hyphens-auto break-words transition-[background-color,border-color,transform] duration-150 sm:aspect-square sm:p-1.5",
         textSize(square.text),
         "focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
         // FREE is neither spotted nor spottable, so it reads as a third
@@ -113,7 +172,7 @@ export function BingoSquare({
           aria-hidden
         />
       ) : null}
-      <span className="relative line-clamp-5">{square.text}</span>
+      <span className="relative line-clamp-6">{softenLongWords(square.text)}</span>
     </button>
   );
 }
