@@ -169,6 +169,21 @@ The seven listed in the previous audit have been worked through; only the last i
 
 Everything that has most embarrassed this project was found by running it, not by reading it.
 
+**The strongest example arrived after this audit was written.** A host on
+Broadway swiped away from the tab and could not get back to his own game —
+not the card, not the host controls (B-24). The cookie was valid the whole
+time; no screen anywhere mentioned that a game existed. Nothing in this
+document could have caught it, because **every route was verified by
+navigating straight to it**, which is precisely the condition that hides the
+bug. A PASS on "host starts" and "player marks squares" says nothing about
+whether a human can find their way back to either screen.
+
+The same night produced the `NEXT_PUBLIC_SITE_URL` bug: the QR code had
+pointed at `localhost:3000` in production for 26 days, under a row marked
+**PASS** reading "QR code + copy link + Web Share, join URL works". True on
+localhost, where the value is correct by accident. Nobody had scanned the
+production QR with a real phone.
+
 - Ending a game 404'd the host and made the "This game has ended" screen unreachable (B-06).
 - A valid session for a deleted user broke joining entirely (B-04).
 - A mark went stale in production only, because two `router.refresh()` calls aborted each other under real latency — invisible on localhost (B-07).
