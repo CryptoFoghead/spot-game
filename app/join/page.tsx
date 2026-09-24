@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { roomCodeSchema } from "@/lib/validation/room";
+import { ResumeGames } from "@/components/room/resume-games";
 
 export const metadata: Metadata = { title: "Join a Room" };
 
@@ -19,6 +20,9 @@ export default async function JoinPage(props: PageProps<"/join">) {
 
   return (
     <div className="mx-auto w-full max-w-md px-4 py-16">
+      <div className="mb-6 empty:mb-0">
+        <ResumeGames />
+      </div>
       <h1 className="text-2xl font-bold tracking-tight">Join a Room</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         Scan your host&apos;s QR code, or enter the 4-digit room code.

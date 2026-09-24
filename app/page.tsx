@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { siteConfig } from "@/lib/config";
 import { hueStyle } from "@/lib/crowd";
 import { createClient } from "@/lib/supabase/server";
+import { ResumeGames } from "@/components/room/resume-games";
 
 const STEPS = [
   { title: "Pick a place", body: "Airport, fair, bar, wedding — or write your own." },
@@ -33,6 +34,9 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:py-16">
+      <div className="mb-8 empty:mb-0">
+        <ResumeGames />
+      </div>
       <section className="flex flex-col gap-10 sm:flex-row sm:items-center sm:gap-12">
         <div className="flex flex-1 flex-col items-start gap-6">
           <h1 className="font-display max-w-xl text-5xl leading-[0.95] font-extrabold sm:text-6xl">

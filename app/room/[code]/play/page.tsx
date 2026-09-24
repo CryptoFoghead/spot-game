@@ -75,6 +75,14 @@ export default async function PlayRoomPage(
               label="Invite"
             />
           </div>
+          {snapshot.isHost ? (
+            <Link
+              href={`/room/${room.code}/host`}
+              className="mt-1.5 inline-block text-xs underline"
+            >
+              Host controls
+            </Link>
+          ) : null}
         </div>
         <div className="flex flex-col items-end gap-1">
           <Badge variant={room.status === "active" ? "default" : "secondary"}>
